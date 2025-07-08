@@ -2,12 +2,12 @@
     "name": "default",
     "model": {
         "which_model": {
-            "name": ["models.cbam_denseunet", "CBAM_DenseUNet"],
+            "name": ["models.cbam_denseunet", "cbam_denseunet"],
             "args": {}
         },
         "networks": [
             {
-                "name": ["models.cbam_denseunet", "CBAM_DenseUNet"],
+                "name": ["models.cbam_denseunet", "cbam_denseunet"],
                 "args": {}
             }
         ]
@@ -50,7 +50,7 @@
             }
         },
         "model_path": "saved_models/",
-        "model_name": "CBAM_DenseUNet.pth",
+        "model_name": "cbam_denseunet.pth",
         "output_images_path": "output_images/"
     }
 }
