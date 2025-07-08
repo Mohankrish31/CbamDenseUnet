@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append('/content/CBAMDenseUNet')
+sys.path.append('/content/cbamdenseunet')
 
 import argparse
 import json
@@ -11,12 +11,12 @@ import test
 
 from data.dataset import PairedDataset
 from torch.utils.data import DataLoader
-from models.cbam_denseunet import CBAM_DenseUNet
-from utils.loss_utils import TotalLoss
+from models.cbam_denseunet import cbam_denseunet
+from utils.loss_utils import totalloss
 from utils.hyperparameter import LOSS_WEIGHTS  # ✅ Should exist and be defined properly
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="CBAM-DenseUNet Runner")
+    parser = argparse.ArgumentParser(description="cbam-denseunet Runner")
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'validate'], required=True)
     parser.add_argument('--config', type=str, default='config/training.json', help='Path to config file')
     return parser.parse_args()
@@ -46,13 +46,13 @@ def main():
         )
 
         # Model
-        model = CBAM_DenseUNet().to(device)
+        model = cbam_denseunet().to(device)
 
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
 
         # Loss Function
-        criterion = TotalLoss(
+        criterion = totalloss(
             device,
             w_mse=LOSS_WEIGHTS["mse"],
             w_ssim=LOSS_WEIGHTS["ssim"],
