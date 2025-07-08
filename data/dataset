@@ -1,56 +1,69 @@
-# /content/CBAMDenseUNet/data/dataset.py
+import os
 
+data_dir = '/content/CbamDenseUnet/data'
+os.makedirs(data_dir, exist_ok=True)
+
+# Create __init__.py
+with open(os.path.join(data_dir, '__init__.py'), 'w') as f:
+    f.write('')  # Keep it empty or add initialization logic
+
+# Create dataset.py if not already present
+dataset_path = os.path.join(data_dir, 'dataset.py')
+if not os.path.exists(dataset_path):
+    with open(dataset_path, 'w') as f:
+        f.write("""
 import os
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import transforms
+import torchvision.transforms as transforms
 
 class PairedDataset(Dataset):
-    def __init__(self, low_light_root, normal_light_root, image_size=[200, 200]):
-        super().__init__()
-        self.low_light_dataset = sorted([
-            os.path.join(low_light_root, image)
-            for image in os.listdir(low_light_root)
-            if image.lower().endswith(('.png', '.jpg', '.jpeg'))
-        ])
-        self.normal_light_dataset = sorted([
-            os.path.join(normal_light_root, image)
-            for image in os.listdir(normal_light_root)
-            if image.lower().endswith(('.png', '.jpg', '.jpeg'))
-        ])
-        assert len(self.low_light_dataset) == len(self.normal_light_dataset), \
-            f"Mismatch: {len(self.low_light_dataset)} low vs {len(self.normal_light_dataset)} normal"
-
-        self.transforms = transforms.Compose([
-            transforms.Resize((image_size[0], image_size[1])),
+    def __init__(self, low_light_dir, normal_light_dir, transform=None):
+        self.low_light_dir = low_light_dir
+        self.normal_light_dir = normal_light_dir
+        self.low_images = sorted(os.listdir(low_light_dir))
+        self.normal_images = sorted(os.listdir(normal_light_dir))
+        self.transform = transform or transforms.Compose([
+            transforms.Resize((224, 224)),
             transforms.ToTensor()
         ])
 
     def __len__(self):
-        return len(self.low_light_dataset)
+        return min(len(self.low_images), len(self.normal_images))
 
     def __getitem__(self, idx):
-        low_img = Image.open(self.low_light_dataset[idx]).convert('RGB')
-        normal_img = Image.open(self.normal_light_dataset[idx]).convert('RGB')
-        return self.transforms(low_img), self.transforms(normal_img)
+        low_img_path = os.path.join(self.low_light_dir, self.low_images[idx])
+        normal_img_path = os.path.join(self.normal_light_dir, self.normal_images[idx])
 
+        low_img = Image.open(low_img_path).convert('RGB')
+        normal_img = Image.open(normal_img_path).convert('RGB')
+
+        if self.transform:
+            low_img = self.transform(low_img)
+            normal_img = self.transform(normal_img)
+
+        return {'low': low_img, 'normal': normal_img}
 
 class UnpairedDataset(Dataset):
-    def __init__(self, low_light_root, image_size=[200, 200]):
-        super().__init__()
-        self.low_light_dataset = sorted([
-            os.path.join(low_light_root, image)
-            for image in os.listdir(low_light_root)
-            if image.lower().endswith(('.png', '.jpg', '.jpeg'))
-        ])
-        self.transforms = transforms.Compose([
-            transforms.Resize((image_size[0], image_size[1])),
+    def __init__(self, image_dir, transform=None):
+        self.image_dir = image_dir
+        self.images = sorted(os.listdir(image_dir))
+        self.transform = transform or transforms.Compose([
+            transforms.Resize((224, 224)),
             transforms.ToTensor()
         ])
 
     def __len__(self):
-        return len(self.low_light_dataset)
+        return len(self.images)
 
     def __getitem__(self, idx):
-        image = Image.open(self.low_light_dataset[idx]).convert('RGB')
-        return self.transforms(image), os.path.basename(self.low_light_dataset[idx])
+        img_path = os.path.join(self.image_dir, self.images[idx])
+        image = Image.open(img_path).convert('RGB')
+
+        if self.transform:
+            image = self.transform(image)
+
+        return {'image': image}
+""")
+
+print("✅ Created __init__.py and dataset.py (if missing) in:", data_dir)
