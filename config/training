@@ -41,7 +41,7 @@
             }
         },
         "model_path": "saved_models/",
-        "model_name": "cbam_denseUNet.pth"
+        "model_name": "cbam_denseunet.pth"
     },
     "test": {
         "device": "cuda",
@@ -63,7 +63,7 @@
             }
         },
         "model_path": "saved_models/",
-        "model_name": "cbam_denseUNet.pth",
+        "model_name": "cbam_denseunet.pth",
         "output_images_path": "train_images/"
     }
 }
