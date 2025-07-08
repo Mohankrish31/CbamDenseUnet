@@ -1,0 +1,56 @@
+{
+  "name": "default",
+  "model": {
+    "which_model": {
+      "name": ["models.cbam_denseunet", "CBAM_DenseUNet"],
+      "args": {}
+    },
+    "networks": [
+      {
+        "name": ["models.cbam_denseunet", "CBAM_DenseUNet"],
+        "args": {}
+      }
+    ]
+  },
+  "train": {
+    "device": "cuda",
+    "n_epoch": 80,
+    "lr": 1e-4,
+    "dataset": {
+      "name": ["data.dataset", "PairedDataset"],
+      "args": {
+        "low_light_root": "/path/to/train/low",
+        "normal_light_root": "/path/to/train/high"
+      }
+    },
+    "dataloader": {
+      "args": {
+        "batch_size": 16,
+        "shuffle": true,
+        "num_workers": 2
+      }
+    },
+    "model_path": "saved_models/",
+    "model_name": "cbam_denseunet.pt"
+  },
+  "test": {
+    "device": "cuda",
+    "dataset": {
+      "name": ["data.dataset", "UnpairedDataset"],
+      "args": {
+        "low_light_root": "/path/to/val/images"
+      },
+      "is_dataset_paired": false
+    },
+    "dataloader": {
+      "args": {
+        "batch_size": 16,
+        "shuffle": false,
+        "num_workers": 2
+      }
+    },
+    "model_path": "saved_models/",
+    "model_name": "cbam_denseunet.pt",
+    "output_images_path": "valid_images/"
+  }
+}
