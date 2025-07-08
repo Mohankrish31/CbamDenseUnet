@@ -11,7 +11,7 @@ from pytorch_msssim import ssim
 from torchvision import transforms
 
 from data.dataset import PairedDataset, UnpairedDataset
-from models.cbam_denseunet import CBAM_DenseUNet
+from models.cbam_denseunet import cbam_denseunet
 from utils.augmentation import get_train_transforms, get_test_transforms
 from utils.reproducibility import set_seed
 from utils.hyperparameter import params
