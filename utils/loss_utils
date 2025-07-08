@@ -1,14 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lpips import LPIPS
+from lpips import lpips
 from pytorch_msssim import ssim
 
-class TotalLoss(nn.Module):
+class totalloss(nn.Module):
     def __init__(self, lpips_net='vgg', weights=None):
         super(TotalLoss, self).__init__()
         self.mse = nn.MSELoss()
-        self.lpips = LPIPS(net=lpips_net)
+        self.lpips = lpips(net=lpips_net)
         self.weights = weights if weights else {
             "mse": 1.0,
             "ssim": 1.0,
