@@ -1,11 +1,10 @@
-
 import sys
 sys.path.append('/content/cbamdenseunet')
 
 import argparse
 import json
 import torch
-import training
+import main   # ✅ Use main instead of training
 import test
 # import validation  # Uncomment if validation.py exists
 
@@ -13,15 +12,15 @@ from data.dataset import PairedDataset
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import cbam_denseunet
 from utils.loss_utils import totalloss
-from utils.hyperparameter import LOSS_WEIGHTS  # ✅ Should exist and be defined properly
+from utils.hyperparameter import LOSS_WEIGHTS  # ✅ Make sure this exists and is defined
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="cbam-denseunet Runner")
+    parser = argparse.ArgumentParser(description="CBAM-DenseUNet Runner")
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'validate'], required=True)
     parser.add_argument('--config', type=str, default='config/training.json', help='Path to config file')
     return parser.parse_args()
 
-def main():
+def main_runner():   # Renamed to avoid conflict with `main` module
     args = parse_args()
 
     # Load config JSON
@@ -60,15 +59,16 @@ def main():
             w_edge=LOSS_WEIGHTS["edge"]
         )
 
-        # Train
-        training.train(config, train_loader, optimizer, criterion, device)
+        # ✅ Call train from main module
+        main.train(config, train_loader, optimizer, criterion, device, model)
 
     elif args.mode == 'test':
         test.test(config)
 
     elif args.mode == 'validate':
-        import validation  # Only if you have this module
+        import validation  # Only if you have validation.py
         validation.validate(config)
 
 if __name__ == '__main__':
-    main()
+    main_runner()
+
