@@ -3,17 +3,19 @@ import json
 import torch
 import sys
 import os
-#  Fix: add nested folder to sys.path
+
+# ✅ Add nested folder to sys.path to access training.py and other modules
 sys.path.append(os.path.join(os.path.dirname(__file__), 'CbamDenseUnet'))
-import main  # from CbamDenseUnet/main.py
+
+import training  # previously `main.py`, now renamed
 import test
-# import validation  # Uncomment if validation.py exists
+# import validation  # Uncomment if you have validation.py
 
 from data.dataset import PairedDataset
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import cbam_denseunet
 from utils.loss_utils import totalloss
-from utils.hyperparameter import LOSS_WEIGHTS  # ✅ Make sure this exists and is defined
+from utils.hyperparameter import LOSS_WEIGHTS  # ✅ Ensure this file exists and is correct
 
 def parse_args():
     parser = argparse.ArgumentParser(description="CBAM-DenseUNet Runner")
@@ -21,10 +23,10 @@ def parse_args():
     parser.add_argument('--config', type=str, default='config/training.json', help='Path to config file')
     return parser.parse_args()
 
-def main_runner():   # Renamed to avoid conflict with `main` module
+def main_runner():
     args = parse_args()
 
-    # Load config JSON
+    # Load training config
     with open(args.config, 'r') as f:
         config = json.load(f)
 
@@ -60,16 +62,15 @@ def main_runner():   # Renamed to avoid conflict with `main` module
             w_edge=LOSS_WEIGHTS["edge"]
         )
 
-        # ✅ Call train from main module
-        main.train(config, train_loader, optimizer, criterion, device, model)
+        # ✅ Call train function from training.py
+        training.train(config, train_loader, optimizer, criterion, device, model)
 
     elif args.mode == 'test':
         test.test(config)
 
     elif args.mode == 'validate':
-        import validation  # Only if you have validation.py
+        import validation  # Only if validation.py exists
         validation.validate(config)
 
 if __name__ == '__main__':
     main_runner()
-
