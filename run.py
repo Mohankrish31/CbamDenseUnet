@@ -1,15 +1,16 @@
+import sys
+sys.path.append('/content/CbamDenseUnet') 
 import argparse
 import json
 import torch
-import os
-import sys
-sys.path.append('/content/CbamDenseUnet')
 
 # ✅ Import local modules
 import training
 import test
 # import validation  # Uncomment if needed
-
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from data.dataset import PairedDataset
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import cbam_denseunet
