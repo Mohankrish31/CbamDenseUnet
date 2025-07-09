@@ -2,6 +2,8 @@ import argparse
 import json
 import torch
 import os
+import sys
+sys.path.append('/content/CbamDenseUnet')
 
 # ✅ Import local modules
 import training
