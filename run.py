@@ -6,7 +6,7 @@ import argparse
 import json
 import torch
 # ✅ Import local modules
-import training
+import main as training
 import test
 # import validation  # Uncomment if needed
 from data.dataset import PairedDataset
