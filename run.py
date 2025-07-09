@@ -2,7 +2,9 @@ import argparse
 import json
 import torch
 import sys
-sys.path.append('/content/CbamDenseUnet') 
+import os
+# Append base directory to sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import main   # ✅ Use main instead of training
 import test
 # import validation  # Uncomment if validation.py exists
