@@ -4,7 +4,7 @@ import torch
 import os
 
 # ✅ Import local modules
-import main
+import training
 import test
 # import validation  # Uncomment if needed
 
