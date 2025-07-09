@@ -9,7 +9,9 @@ import lpips
 from pytorch_msssim import ssim
 from torchvision import transforms
 import sys
-sys.path.append('/content/CbamDenseUnet') 
+import os
+#  Fix path for 'data.dataset'
+sys.path.append(os.path.dirname(__file__))
 from data.dataset import PairedDataset, UnpairedDataset
 from models.cbam_denseunet import Cbam_DenseUnet
 from utils.augmentation import get_train_transforms, get_test_transforms
