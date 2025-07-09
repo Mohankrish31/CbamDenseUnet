@@ -1,4 +1,8 @@
 import os
+import sys
+
+# ✅ Ensure Python can find data.dataset
+sys.path.append('/content/CbamDenseUnet')
 
 data_dir = '/content/CbamDenseUnet/data'
 os.makedirs(data_dir, exist_ok=True)
@@ -34,14 +38,11 @@ class PairedDataset(Dataset):
     def __getitem__(self, idx):
         low_img_path = os.path.join(self.low_light_dir, self.low_images[idx])
         normal_img_path = os.path.join(self.normal_light_dir, self.normal_images[idx])
-
         low_img = Image.open(low_img_path).convert('RGB')
         normal_img = Image.open(normal_img_path).convert('RGB')
-
         if self.transform:
             low_img = self.transform(low_img)
             normal_img = self.transform(normal_img)
-
         return {'low': low_img, 'normal': normal_img}
 
 class UnpairedDataset(Dataset):
@@ -59,10 +60,8 @@ class UnpairedDataset(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(self.image_dir, self.images[idx])
         image = Image.open(img_path).convert('RGB')
-
         if self.transform:
             image = self.transform(image)
-
         return {'image': image}
 """)
 
