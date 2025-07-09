@@ -3,9 +3,9 @@ import json
 import torch
 import sys
 import os
-# Append base directory to sys.path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import main   # ✅ Use main instead of training
+#  Fix: add nested folder to sys.path
+sys.path.append(os.path.join(os.path.dirname(__file__), 'CbamDenseUnet'))
+import main  # from CbamDenseUnet/main.py
 import test
 # import validation  # Uncomment if validation.py exists
 
