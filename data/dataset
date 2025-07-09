@@ -1,21 +1,18 @@
 import os
 import sys
 
-# ✅ Ensure Python can find data.dataset
+# ✅ Ensure Python can find 'data.dataset'
 sys.path.append('/content/CbamDenseUnet')
 
+# Directory for data
 data_dir = '/content/CbamDenseUnet/data'
 os.makedirs(data_dir, exist_ok=True)
 
-# Create __init__.py
-with open(os.path.join(data_dir, '__init__.py'), 'w') as f:
-    f.write('')  # Keep it empty or add initialization logic
-
-# Create dataset.py if not already present
+# Create only dataset.py (NOT __init__.py)
 dataset_path = os.path.join(data_dir, 'dataset.py')
 if not os.path.exists(dataset_path):
     with open(dataset_path, 'w') as f:
-        f.write("""
+        f.write("""\
 import os
 from PIL import Image
 from torch.utils.data import Dataset
@@ -65,4 +62,4 @@ class UnpairedDataset(Dataset):
         return {'image': image}
 """)
 
-print("✅ Created __init__.py and dataset.py (if missing) in:", data_dir)
+print("✅ Created dataset.py (without __init__.py) in:", data_dir)
