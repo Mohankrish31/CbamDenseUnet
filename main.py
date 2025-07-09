@@ -67,16 +67,13 @@ def main():
         train_loader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True)
         optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'])
         criterion = nn.MSELoss()
-
 for epoch in range(params['epochs']):
     loss = train(model, train_loader, optimizer, criterion, device)
-    print(f"Epoch {epoch+1}/{params['epochs']} - Loss: {loss:.4f}")
-    
+    print(f"Epoch {epoch+1}/{params['epochs']} - Loss: {loss:.4f}") 
     torch.save(
         model.state_dict(),
         os.path.join(config['train']['model_path'], config['train']['model_name'])
     )
-
     else:  # test mode
         dataset_args = config['test']['dataset']['args']
         test_dataset = UnpairedDataset(
@@ -84,10 +81,8 @@ for epoch in range(params['epochs']):
             image_size=params['img_size']
         )
         test_loader = DataLoader(test_dataset, batch_size=params['batch_size'], shuffle=False)
-
         model.load_state_dict(torch.load(os.path.join(config['test']['model_path'], config['test']['model_name']), map_location=device))
         output_path = config['test']['output_images_path']
         test(model, test_loader, device, output_path)
-
 if __name__ == '__main__':
     main()
