@@ -67,10 +67,15 @@ def main():
         train_loader = DataLoader(train_dataset, batch_size=params['batch_size'], shuffle=True)
         optimizer = torch.optim.Adam(model.parameters(), lr=params['lr'])
         criterion = nn.MSELoss()
-     for epoch in range(params['epochs']):
-            loss = train(model, train_loader, optimizer, criterion, device)
-            print(f"Epoch {epoch+1}/{params['epochs']} - Loss: {loss:.4f}")
-           torch.save(model.state_dict(), os.path.join(config['train']['model_path'], config['train']['model_name']))
+
+for epoch in range(params['epochs']):
+    loss = train(model, train_loader, optimizer, criterion, device)
+    print(f"Epoch {epoch+1}/{params['epochs']} - Loss: {loss:.4f}")
+    
+    torch.save(
+        model.state_dict(),
+        os.path.join(config['train']['model_path'], config['train']['model_name'])
+    )
 
     else:  # test mode
         dataset_args = config['test']['dataset']['args']
