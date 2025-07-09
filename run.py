@@ -1,9 +1,8 @@
-import sys
-sys.path.append('/content/cbamdenseunet')
-
 import argparse
 import json
 import torch
+import sys
+sys.path.append('/content/CbamDenseUnet') 
 import main   # ✅ Use main instead of training
 import test
 # import validation  # Uncomment if validation.py exists
