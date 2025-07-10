@@ -1,0 +1,10 @@
+parser.py:
+import argparse
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model', type=str, default='cbam_denseunet')
+    parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--batch_size', type=int, default=16)
+    return parser
+
+
