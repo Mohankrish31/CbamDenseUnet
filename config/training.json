@@ -5,7 +5,7 @@
         "which_model": {
             "name": [
                 "models.cbam_denseunet",
-                "CBAM_DenseUNet"
+                "cbam_denseunet"
             ],
             "args": {}
         },
@@ -13,7 +13,7 @@
             {
                 "name": [
                     "models.cbam_denseunet",
-                    "CBAM_DenseUNet"
+                    "cbam_denseunet"
                 ],
                 "args": {}
             }
@@ -41,7 +41,7 @@
             }
         },
         "model_path": "saved_models/",
-        "model_name": "CBAM_DenseUNet.pth"
+        "model_name": "cbam_denseunet.pth"
     },
     "test": {
         "device": "cuda",
@@ -63,7 +63,7 @@
             }
         },
         "model_path": "saved_models/",
-        "model_name": "CBAM_DenseUNet.pth",
+        "model_name": "cbam_denseunet.pth",
         "output_images_path": "train_images/"
     }
 }
