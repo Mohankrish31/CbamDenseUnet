@@ -1,0 +1,49 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from lpips import LPIPS
+from pytorch_msssim import ssim
+
+class TotalLoss(nn.Module):
+    def __init__(self, lpips_net='vgg', weights=None):
+        super(TotalLoss, self).__init__()
+        self.mse = nn.MSELoss()
+        self.lpips = LPIPS(net=lpips_net)
+        self.weights = weights if weights else {
+            "mse": 1.0,
+            "ssim": 1.0,
+            "lpips": 0.5,
+            "edge": 0.5
+        }
+
+    def sobel_edge_loss(self, x, y):
+        sobel_x = torch.tensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]],
+                               dtype=torch.float32, device=x.device).view(1, 1, 3, 3)
+        sobel_y = torch.tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]],
+                               dtype=torch.float32, device=x.device).view(1, 1, 3, 3)
+
+        def apply_sobel(img):
+            if img.shape[1] != 1:
+                img = img.mean(dim=1, keepdim=True)  # convert to grayscale
+            gx = F.conv2d(img, sobel_x, padding=1)
+            gy = F.conv2d(img, sobel_y, padding=1)
+            return torch.sqrt(gx ** 2 + gy ** 2)
+
+        edge_x = apply_sobel(x)
+        edge_y = apply_sobel(y)
+        return F.l1_loss(edge_x, edge_y)
+
+    def forward(self, output, target):
+        loss_mse = self.mse(output, target)
+        loss_ssim = 1 - ssim(output, target, data_range=1.0, size_average=True)
+        loss_lpips = self.lpips(output, target).mean()
+        loss_edge = self.sobel_edge_loss(output, target)
+
+        total = (
+            self.weights["mse"] * loss_mse +
+            self.weights["ssim"] * loss_ssim +
+            self.weights["lpips"] * loss_lpips +
+            self.weights["edge"] * loss_edge
+        )
+
+        return total, loss_mse, loss_ssim, loss_lpips, loss_edge
