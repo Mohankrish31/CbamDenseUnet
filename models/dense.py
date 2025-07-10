@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-
-class DenseBlock(nn.Module):
+class denseblock(nn.Module):
     def __init__(self, in_channels, growth_rate=12, num_layers=3):
         super().__init__()
         layers = []
@@ -9,7 +8,6 @@ class DenseBlock(nn.Module):
             layers.append(nn.Conv2d(in_channels + i * growth_rate, growth_rate, 3, padding=1))
             layers.append(nn.ReLU(inplace=True))
         self.net = nn.Sequential(*layers)
-
     def forward(self, x):
         features = [x]
         for i in range(0, len(self.net), 2):
