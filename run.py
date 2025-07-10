@@ -20,12 +20,9 @@ def parse_args():
     return parser.parse_args()
 def main():
     args = parse_args()
-
     with open(args.config, 'r') as f:
         config = json.load(f)
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     if args.mode == 'train':
         # Load Dataset
         train_dataset = PairedDataset(
@@ -33,20 +30,16 @@ def main():
             config["train"]["normal_light_root"],
             transform=None
         )
-
         train_loader = DataLoader(
             train_dataset,
             batch_size=config["train"]["batch_size"],
             shuffle=True,
             num_workers=2
         )
-
         # Load Model
         model = cbam_denseunet().to(device)
-
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
-
         # Custom Loss Function
         criterion = totalloss(
             device,
@@ -55,10 +48,8 @@ def main():
             w_lpips=LOSS_WEIGHTS["lpips"],
             w_edge=LOSS_WEIGHTS["edge"]
         )
-
         # Train Model
         training.train(config, train_loader, optimizer, criterion, device, model)
-
     elif args.mode == 'test':
         test.test(config)
     elif args.mode == 'validate':
