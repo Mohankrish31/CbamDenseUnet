@@ -1,7 +1,6 @@
 import sys
 import os
 sys.path.append('/content/CbamDenseUnet') 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 import argparse
 import json
 import torch
@@ -13,16 +12,12 @@ from data.dataset import PairedDataset
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import cbam_denseunet
 from utils.loss_utils import totalloss
-from utils.hyperparameter import LOSS_WEIGHTS
-
-
+from utils.hyperparameter_tuning import LOSS_WEIGHTS
 def parse_args():
     parser = argparse.ArgumentParser(description="CBAM-DenseUNet Runner")
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'validate'], required=True)
     parser.add_argument('--config', type=str, default='config/training/training.json', help='Path to config file')
     return parser.parse_args()
-
-
 def main():
     args = parse_args()
 
@@ -66,11 +61,8 @@ def main():
 
     elif args.mode == 'test':
         test.test(config)
-
     elif args.mode == 'validate':
         import validation
         validation.validate(config)
-
-
 if __name__ == '__main__':
     main()
