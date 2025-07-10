@@ -1,4 +1,4 @@
-# /content/CBAMDenseUNet/utils/hyperparameter.py
+# /content/CBAMDenseUNet/utils/hyperparameter_tuning.py
 
 # ✅ Used in run.py for weighted loss calculation
 LOSS_WEIGHTS = {
