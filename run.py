@@ -26,15 +26,19 @@ def main():
     if args.mode == 'train':
         # Load Dataset
         train_dataset = PairedDataset(
-            config["train"]["low_light_root"],
-            config["train"]["normal_light_root"],
-            transform=None
+        config["train"]["dataset"]["args"]["low_light_root"],
+        config["train"]["dataset"]["args"]["normal_light_root"],
+        transform=None
+)
+
         )
         train_loader = DataLoader(
-            train_dataset,
-            batch_size=config["train"]["batch_size"],
-            shuffle=True,
-            num_workers=2
+        train_dataset,
+        batch_size=config["train"]["dataloader"]["args"]["batch_size"],
+        shuffle=config["train"]["dataloader"]["args"]["shuffle"],
+        num_workers=config["train"]["dataloader"]["args"]["num_workers"]
+)
+
         )
         # Load Model
         model = cbam_denseunet().to(device)
