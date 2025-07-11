@@ -28,7 +28,6 @@ def main():
         train_dataset = PairedDataset(
         config["train"]["dataset"]["args"]["low_light_root"],
         config["train"]["dataset"]["args"]["normal_light_root"],
-        transform=None
 )
         train_loader = DataLoader(
         train_dataset,
