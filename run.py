@@ -30,16 +30,12 @@ def main():
         config["train"]["dataset"]["args"]["normal_light_root"],
         transform=None
 )
-
-        )
         train_loader = DataLoader(
         train_dataset,
         batch_size=config["train"]["dataloader"]["args"]["batch_size"],
         shuffle=config["train"]["dataloader"]["args"]["shuffle"],
         num_workers=config["train"]["dataloader"]["args"]["num_workers"]
 )
-
-        )
         # Load Model
         model = cbam_denseunet().to(device)
         # Optimizer
