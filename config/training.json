@@ -29,8 +29,8 @@
                 "PairedDataset"
             ],
             "args": {
-                "low_light_root": "/Users/sinaraoufi/Downloads/LOLdataset/train/low",
-                "normal_light_root": "/Users/sinaraoufi/Downloads/LOLdataset/train/high"
+                "low_light_root": "/content/LOLdataset/train/low",
+                "normal_light_root": "/content/LOLdataset/train/high"
             }
         },
         "dataloader": {
@@ -51,7 +51,7 @@
                 "UnpairedDataset"
             ],
             "args": {
-                "low_light_root": "/Users/sinaraoufi/Downloads/LOLdataset/test/low"
+                "low_light_root": "/content/LOLdataset/train/low"
             },
             "is_dataset_paired": false
         },
