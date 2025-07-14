@@ -19,8 +19,8 @@
     "dataset": {
       "name": ["data.dataset", "PairedDataset"],
       "args": {
-        "low_light_root": "/Users/sinaraoufi/Downloads/LOLdataset/train/low",
-        "normal_light_root": "/Users/sinaraoufi/Downloads/LOLdataset/train/high"
+        "low_light_root": "/content/LOLdataset/train/low",
+        "normal_light_root": "/content/LOLdataset/train/high"
       }
     },
     "dataloader": {
