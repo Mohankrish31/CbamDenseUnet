@@ -38,7 +38,8 @@ def main():
             normal_light_root = config["train"]["dataset"]["args"]["normal_light_root"],
             image_size        = config["train"]["dataset"]["args"].get("image_size", [224, 224])
         )
-
+        #  Dataset length debug print
+        print("Length of PairedDataset:", len(train_dataset))
         train_loader = DataLoader(
             train_dataset,
             batch_size  = config["train"]["dataloader"]["args"]["batch_size"],
