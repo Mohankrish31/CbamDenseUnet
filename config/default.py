@@ -4,7 +4,7 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
-from models.cbam_denseunet import cbam_denseunet
+from models.cbam_denseunet import CBAM_DenseUNet
 from dataset import cvccolondb
 from loss_utils import CombinedLoss
 # Load config
@@ -12,7 +12,7 @@ with open("config.json") as f:
     config = json.load(f)
 def train():
     print(" Training started...")
-    model = cbam_denseunet(**config["model"]["which_model"]["args"]).cuda()
+    model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
     train_data = cvccolondb(**config["train"]["dataset"]["args"])
     train_loader = DataLoader(train_data, **config["train"]["dataloader"]["args"])
     optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
@@ -31,10 +31,10 @@ def train():
         print(f"Epoch {epoch+1}/{config['train']['n_epoch']} Loss: {epoch_loss / len(train_loader):.4f}")
     os.makedirs(config["train"]["model_path"], exist_ok=True)
     torch.save(model.state_dict(), os.path.join(config["train"]["model_path"], config["train"]["model_name"]))
-    print("✅ Training complete and model saved.")
+    print("Training complete and model saved.")
 def validate():
-    print("🔵 Validation started...")
-    model = cbam_denseunet(**config["model"]["which_model"]["args"]).cuda()
+    print("Validation started...")
+    model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
     model.load_state_dict(torch.load(os.path.join(config["train"]["model_path"], config["train"]["model_name"])))
     model.eval()
     val_data = cvccolondb(**config["val"]["dataset"]["args"])
@@ -46,10 +46,10 @@ def validate():
             high = batch["high"].cuda()
             output = model(low)
             val_loss += torch.nn.functional.mse_loss(output, high).item()
-    print(f"✅ Validation MSE: {val_loss / len(val_loader):.4f}")
+    print(f"Validation MSE: {val_loss / len(val_loader):.4f}")
 def test():
-    print("🟣 Testing started...")
-    model = cbam_denseunet(**config["model"]["which_model"]["args"]).cuda()
+    print("Testing started...")
+    model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
     model.load_state_dict(torch.load(os.path.join(config["test"]["model_path"], config["test"]["model_name"])))
     model.eval()
     test_data = cvccolondb(**config["test"]["dataset"]["args"])
@@ -60,7 +60,7 @@ def test():
             low = batch["low"].cuda()
             output = model(low)
             save_image(output, os.path.join(config["test"]["output_images_path"], f"output_{i}.png"))
-    print("✅ Test images saved to:", config["test"]["output_images_path"])
+    print("Test images saved to:", config["test"]["output_images_path"])
 # Argument parser
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CBAM-DenseUNet Pipeline")
