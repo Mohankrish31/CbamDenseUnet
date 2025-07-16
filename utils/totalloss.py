@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lpips import lpips
+from lpips import LPIPS
 from pytorch_msssim import ssim
-class totalloss(nn.Module):
+class TotaLoss(nn.Module):
     def __init__(self, lpips_net='vgg', weights=None):
         super(totalloss, self).__init__()
-        self.mse = nn.mseloss()
-        self.lpips = lpips(net=lpips_net)
+        self.mse = nn.MSELoss()  # fixed case
+        self.lpips = LPIPS(net=lpips_net)
+        self.lpips.eval()  #  Optional but recommended for consistency
         self.weights = weights if weights else {
             "mse": 1.0,
             "ssim": 1.0,
@@ -21,10 +22,10 @@ class totalloss(nn.Module):
                                dtype=torch.float32, device=x.device).view(1, 1, 3, 3)
         def apply_sobel(img):
             if img.shape[1] != 1:
-                img = img.mean(dim=1, keepdim=True)  # convert to grayscale
+                img = img.mean(dim=1, keepdim=True)  # Convert to grayscale
             gx = F.conv2d(img, sobel_x, padding=1)
             gy = F.conv2d(img, sobel_y, padding=1)
-            return torch.sqrt(gx ** 2 + gy ** 2)
+            return torch.sqrt(gx ** 2 + gy ** 2 + 1e-6)
         edge_x = apply_sobel(x)
         edge_y = apply_sobel(y)
         return F.l1_loss(edge_x, edge_y)
