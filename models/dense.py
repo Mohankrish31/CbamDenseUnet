@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-class Denseblock(nn.Module):
+class DenseBlock(nn.Module):
     def __init__(self, in_channels, growth_rate=12, num_layers=3):
         super().__init__()
         layers = []
