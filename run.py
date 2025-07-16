@@ -2,15 +2,15 @@ import sys
 import os
 import torch
 #Add project path (for Colab or custom path)
-sys.path.append('/content/CbamDenseUnet') 
+sys.path.append('/content/CbamDenseUNet') 
 #Import local modules
-import main as training
+import main as train
 import test
 #import validation  # Uncomment if needed
 from data.dataset import PairedDataset 
 from torch.utils.data import DataLoader
-from models.cbam_denseunet import cbam_denseunet
-from utils.loss_utils import totalloss
+from models.cbam_denseunet import CBAM_DenseUNet
+from utils.loss_utils import TotalLoss
 from utils.hyperparameter_tuning import LOSS_WEIGHTS
 from utils.parser import get_config  #Load config from parser
 def main():
@@ -36,11 +36,11 @@ def main():
         )
         # <<<––––– END DATA SECTION ––––––<<<
         # Load Model
-        model = cbam_denseunet().to(device)
+        model = CBAM_DenseUNet().to(device)
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
         # Loss Function
-        criterion = totalloss(
+        criterion = TotalLoss(
             device,
             w_mse   = LOSS_WEIGHTS["mse"],
             w_ssim  = LOSS_WEIGHTS["ssim"],
@@ -48,11 +48,11 @@ def main():
             w_edge  = LOSS_WEIGHTS["edge"]
         )
         # Train Model
-        training.train(config, train_loader, optimizer, criterion, device, model)
+        train.train(config, train_loader, optimizer, criterion, device, model)
     elif mode == 'test':
         test.test(config)
     elif mode == 'validate':
         import validation
-        validation.validate(config)
+        valid.validate(config)
 if __name__ == '__main__':
     main()
