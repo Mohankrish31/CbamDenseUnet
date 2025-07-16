@@ -8,7 +8,7 @@ class CBAM_DenseUNet(nn.Module):
         self.encoder = nn.Sequential(
             nn.Conv2d(in_channels, base_channels, 3, padding=1),
             nn.ReLU(inplace=True),
-            Denseblock(base_channels, growth_rate=12, num_layers=3),
+            DenseBlock(base_channels, growth_rate=12, num_layers=3),
             CBAM(base_channels + 3 * 12)
         )
         self.decoder = nn.Sequential(
