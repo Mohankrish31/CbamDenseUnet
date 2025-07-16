@@ -1,22 +1,22 @@
 import torch
 from torch.utils.data import DataLoader
-from models.cbam_denseunet import cbam_denseunet
+from models.cbam_denseunet import CBAM_DenseUNet
 from dataset import cvccolondb
-from utils.loss_utils import totalloss  # ✅ Import your total loss function
+from utils.loss_utils import TotalLoss  # ✅ Import your total loss function
 import os
 import json
 # Load config
 with open("config.json") as f:
     config = json.load(f)
 # Init model
-model = cbam_denseunet(**config["model"]["which_model"]["args"]).cuda()
+model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
 model.load_state_dict(torch.load(os.path.join(config["train"]["model_path"], config["train"]["model_name"])))
 model.eval()
 # Init validation set and loader
 val_data = cvccolondb(**config["val"]["dataset"]["args"])
 val_loader = DataLoader(val_data, **config["val"]["dataloader"]["args"])
 # Init loss function
-loss_fn = totalloss()
+loss_fn = TotalLoss ()
 # Track total and average metrics
 total_loss, total_mse, total_ssim, total_lpips, total_edge = 0, 0, 0, 0, 0
 # Run validation
