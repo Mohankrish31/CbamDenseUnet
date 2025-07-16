@@ -11,8 +11,8 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/cvccolondb/train/low",
-      "high_dir": "/content/cvccolondb/train/high",
+      "low_dir": "/content/cvc-colondb/train/low",
+      "high_dir": "/content/cvc-colondb/train/high",
       "transform": true
     }
   },
