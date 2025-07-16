@@ -2,7 +2,7 @@
 import torch
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
-from dataset import cvccolondb
+from dataset.cvccolondb import cvccolondb
 from torchvision.utils import save_image
 import os
 import json
