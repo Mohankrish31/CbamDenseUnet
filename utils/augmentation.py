@@ -39,3 +39,11 @@ def get_train_augmentations(size=(224, 224), use_clahe=False):
         transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
     ])
+# Added function for backward compatibility
+def some_transformation_function(size=(224, 224)):
+    return transforms.Compose([
+        transforms.Resize(size),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor()
+    ])
+
