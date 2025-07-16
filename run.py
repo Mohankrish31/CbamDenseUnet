@@ -1,44 +1,31 @@
 import sys
 import os
-import argparse
-import json
 import torch
-
-# ✅ Add project path
+#Add project path (for Colab or custom path)
 sys.path.append('/content/CbamDenseUnet') 
-
-# ✅ Import local modules
+#Import local modules
 import main as training
 import test
-# import validation  # Uncomment if needed
+#import validation  # Uncomment if needed
 from data.dataset import PairedDataset 
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import cbam_denseunet
 from utils.loss_utils import totalloss
 from utils.hyperparameter_tuning import LOSS_WEIGHTS
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="CBAM-DenseUNet Runner")
-    parser.add_argument('--mode', type=str, choices=['train', 'test', 'validate'], required=True)
-    parser.add_argument('--config', type=str, default='config/training/training.json', help='Path to config file')
-    return parser.parse_args()
-
+from utils.parser import get_config  #Load config from parser
 def main():
-    args = parse_args()
-
-    with open(args.config, 'r') as f:
-        config = json.load(f)
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    if args.mode == 'train':
+    #Get config (with argparse and json loading)
+    config = get_config()
+    device = torch.device(config.get("train", {}).get("device", "cuda" if torch.cuda.is_available() else "cpu"))
+    #Determine operation mode
+    mode = config.get("run_mode", "train")  # Default to train if not specified
+    if mode == 'train':
         # >>>––––– BEGIN DATA SECTION ––––––>>>
         train_dataset = PairedDataset(
             low_light_root    = config["train"]["dataset"]["args"]["low_light_root"],
             normal_light_root = config["train"]["dataset"]["args"]["normal_light_root"],
             image_size        = config["train"]["dataset"]["args"].get("image_size", [224, 224])
         )
-        #  Dataset length debug print
         print("Length of PairedDataset:", len(train_dataset))
         train_loader = DataLoader(
             train_dataset,
@@ -48,14 +35,11 @@ def main():
             pin_memory  = True
         )
         # <<<––––– END DATA SECTION ––––––<<<
-
         # Load Model
         model = cbam_denseunet().to(device)
-
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
-
-        # Custom Loss Function
+        # Loss Function
         criterion = totalloss(
             device,
             w_mse   = LOSS_WEIGHTS["mse"],
@@ -63,16 +47,12 @@ def main():
             w_lpips = LOSS_WEIGHTS["lpips"],
             w_edge  = LOSS_WEIGHTS["edge"]
         )
-
         # Train Model
         training.train(config, train_loader, optimizer, criterion, device, model)
-
-    elif args.mode == 'test':
+    elif mode == 'test':
         test.test(config)
-
-    elif args.mode == 'validate':
+    elif mode == 'validate':
         import validation
         validation.validate(config)
-
 if __name__ == '__main__':
     main()
