@@ -10,8 +10,8 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/cvccolondb/val/low",
-      "high_dir": "/content/cvccolondb/val/high",
+      "low_dir": "/content/cvc-colondb/val/low",
+      "high_dir": "/content/cvc-colondb/val/high",
       "transform": false
     }
   },
