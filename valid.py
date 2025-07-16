@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
-from dataset import cvccolondb
+from dataset import cvc-colondb
 from utils.loss_utils import TotalLoss  # ✅ Import your total loss function
 import os
 import json
@@ -13,7 +13,7 @@ model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
 model.load_state_dict(torch.load(os.path.join(config["train"]["model_path"], config["train"]["model_name"])))
 model.eval()
 # Init validation set and loader
-val_data = cvccolondb(**config["val"]["dataset"]["args"])
+val_data = cvc-colondb(**config["val"]["dataset"]["args"])
 val_loader = DataLoader(val_data, **config["val"]["dataloader"]["args"])
 # Init loss function
 loss_fn = TotalLoss ()
