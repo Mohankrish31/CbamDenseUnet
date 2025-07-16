@@ -1,30 +1,35 @@
 # CBAM-DenseUNet (WIP)
-
-Work in progress on low-light colonoscopy image enhancement using CBAM and DenseUNet.
-
-## ✅ Current Goals:
-- [x] Build model ✅
-- [x] Train on CVC-ColonDB ✅
-- [x] Add SSIM, LPIPS, and Sobel loss ✅
-- [ ] Evaluate with:
-  - [x] Total Loss
-  - [ ] C-PSNR ❌
-  - [ ] SSIM ❌
-  - [ ] EBCM ❌
-  - [ ] LPIPS ❌
-- [ ] Write manuscript ❌
-
+Work-in-progress: Low-light colonoscopy image enhancement using CBAM and DenseUNet.
 ---
+## ✅ Current Goals
+- ✅ Build model (`CBAM_DenseUNet`)
+- ✅ Train on **CVC-ColonDB** dataset
+- ✅ Integrate multi-loss:
+  - Structural Similarity (SSIM)
+  - Learned Perceptual Image Patch Similarity (LPIPS)
+  - Sobel Edge Loss
+---
+### 📊 Evaluation Metrics (To Do)
 
+| Metric        | Status |
+|---------------|--------|
+| Total Loss    | ✅ Done |
+| C-PSNR        | ❌ Pending |
+| SSIM          | ❌ Pending |
+| EBCM          | ❌ Pending |
+| LPIPS         | ❌ Pending |
+---
 ## 🔄 Next Steps
-- [ ] Finish validation and compute missing evaluation metrics
-- [ ] Save `.pt` and validate on real data
-- [ ] Prepare plots:
-  - [ ] Total Loss vs Epoch
-  - [ ] SSIM vs Epoch
-  - [ ] LPIPS vs Epoch
-  - [ ] EBCM vs Epoch
-  - [ ] ✅ **C-PSNR vs Epoch**
-- [ ] Write complete documentation and final `README.md`
+- [ ] Finalize validation loop and compute missing metrics
+- [ ] Save final `.pt` model and validate on real data
+- [ ] Plot metrics vs. epoch:
+  - [ ] Total Loss
+  - [ ] SSIM
+  - [ ] LPIPS
+  - [ ] EBCM
+  - [x] C-PSNR
+- [ ] Write full documentation
+- [ ] Finalize `README.md`
+---
+📌 _Note: This is a work-in-progress. Full documentation and performance results will be added once initial experiments are completed._
 
-> Note: This is a work-in-progress draft. Full documentation will be added after initial experiments.
