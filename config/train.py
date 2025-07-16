@@ -2,27 +2,30 @@ import torch
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
 from dataset import cvccolondb
-from utils.loss_utils import TotalLoss  # ✅ Your custom total loss function
+from utils.loss_utils import totalloss  # ✅ Custom total loss function
 from utils.hyperparameter_tuning import get_optimizer, get_scheduler, update_loss_weights
 from utils.reproducibility import set_seed
+from utils.logger import Logger  # ✅ Logger added
 import os
 import json
-# Reproducibility
+# ✅ Set seed for reproducibility
 set_seed(42)
-# Load configuration
+# ✅ Load configuration
 with open("config.json") as f:
     config = json.load(f)
-# Initialize model
+# ✅ Initialize model
 model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
-# Dataset and DataLoader
+# ✅ Dataset and DataLoader
 train_data = cvccolondb(**config["train"]["dataset"]["args"])
 train_loader = DataLoader(train_data, **config["train"]["dataloader"]["args"])
-# Optimizer and Scheduler
+# ✅ Optimizer and Scheduler
 optimizer = get_optimizer(model, lr=config["train"]["lr"])
 scheduler = get_scheduler(optimizer)
-# Loss Function
+# ✅ Loss Function
 loss_fn = totalloss()
-# Training Loop
+# ✅ Logger
+logger = Logger()
+# ✅ Training Loop
 for epoch in range(config["train"]["n_epoch"]):
     model.train()
     running_total, running_mse, running_ssim, running_lpips, running_edge = 0, 0, 0, 0, 0
@@ -39,18 +42,33 @@ for epoch in range(config["train"]["n_epoch"]):
         running_ssim += ssim_loss.item()
         running_lpips += lpips_loss.item()
         running_edge += edge_loss.item()
-    # Optional scheduler step (e.g., ReduceLROnPlateau requires val loss)
+    # Optional scheduler step (e.g., ReduceLROnPlateau)
     if scheduler is not None:
         scheduler.step(running_total / len(train_loader))
-    # Logging average per epoch
+    # Logging average metrics per epoch
     num_batches = len(train_loader)
+    avg_total = running_total / num_batches
+    avg_mse = running_mse / num_batches
+    avg_ssim = running_ssim / num_batches
+    avg_lpips = running_lpips / num_batches
+    avg_edge = running_edge / num_batches
     print(f"\n📘 Epoch {epoch+1}/{config['train']['n_epoch']}")
-    print(f"   Total Loss : {running_total / num_batches:.4f}")
-    print(f"   MSE        : {running_mse / num_batches:.4f}")
-    print(f"   SSIM Loss  : {running_ssim / num_batches:.4f}")
-    print(f"   LPIPS Loss : {running_lpips / num_batches:.4f}")
-    print(f"   Edge Loss  : {running_edge / num_batches:.4f}")
-# Save the trained model
+    print(f"   Total Loss : {avg_total:.4f}")
+    print(f"   MSE        : {avg_mse:.4f}")
+    print(f"   SSIM Loss  : {avg_ssim:.4f}")
+    print(f"   LPIPS Loss : {avg_lpips:.4f}")
+    print(f"   Edge Loss  : {avg_edge:.4f}")
+    # ✅ Log values
+    logger.log({
+        "epoch": epoch + 1,
+        "loss": avg_total,
+        "mse": avg_mse,
+        "ssim": avg_ssim,
+        "lpips": avg_lpips,
+        "edge": avg_edge
+    })
+# ✅ Save the trained model
 os.makedirs(config["train"]["model_path"], exist_ok=True)
-torch.save(model.state_dict(), os.path.join(config["train"]["model_path"], config["train"]["model_name"]))
-print(f"\n✅ Model saved to {config['train']['model_path']}{config['train']['model_name']}")
+save_path = os.path.join(config["train"]["model_path"], config["train"]["model_name"])
+torch.save(model.state_dict(), save_path)
+print(f"\n✅ Model saved to {save_path}")
