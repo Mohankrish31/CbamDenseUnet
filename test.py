@@ -2,7 +2,7 @@
 import torch
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
-from dataset import cvc-colondb
+from dataset import cvccolondb
 from torchvision.utils import save_image
 import os
 import json
@@ -17,7 +17,7 @@ model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
 model.load_state_dict(torch.load(os.path.join(config["test"]["model_path"], config["test"]["model_name"])))
 model.eval()
 # Test set
-test_data = cvc-colondb(**config["test"]["dataset"]["args"])
+test_data = cvccolondb(**config["test"]["dataset"]["args"])
 test_loader = DataLoader(test_data, **config["test"]["dataloader"]["args"])
 # Create output directory
 os.makedirs(config["test"]["output_images_path"], exist_ok=True)
