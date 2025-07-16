@@ -1,7 +1,7 @@
 # ✅ train.py
 import torch
 from torch.utils.data import DataLoader
-from models.cbam_denseunet import cbam_denseunet
+from models.cbam_denseunet import CBAM_DenseUNet
 from dataset import cvccolondb
 from loss_utils import CombinedLoss  # Your custom loss
 import os, json
@@ -9,7 +9,7 @@ import os, json
 with open("config.json") as f:
     config = json.load(f)
 # Init model
-model = cbam_denseunet(**config["model"]["which_model"]["args"]).cuda()
+model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
 # Dataset and DataLoader
 train_data = cvccolondb(**config["train"]["dataset"]["args"])
 train_loader = DataLoader(train_data, **config["train"]["dataloader"]["args"])
