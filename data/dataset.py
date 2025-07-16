@@ -12,7 +12,7 @@ def clahe_rgb(img):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     hsv[:, :, 2] = clahe.apply(hsv[:, :, 2])
     return cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
-class cvc-colondb(Dataset):
+class cvccolondb(Dataset):
     def __init__(self, root, mode="train", size=(224, 224), use_clahe=True):
         """
         Args:
