@@ -1,0 +1,30 @@
+{
+  "model": {
+    "which_model": {
+      "name": "CBAM_DenseUNet",
+      "args": {
+        "in_channels": 3,
+        "out_channels": 3,
+        "features": 64
+      }
+    }
+  },
+  "dataset": {
+    "args": {
+      "low_dir": "/content/dataset/test/low",
+      "high_dir": "/content/dataset/test/high",
+      "transform": false
+    }
+  },
+  "dataloader": {
+    "args": {
+      "batch_size": 4,
+      "shuffle": false,
+      "num_workers": 2,
+      "pin_memory": true
+    }
+  },
+  "model_path": "saved_models",
+  "model_name": "cbam_train_model.pth"
+}
+
