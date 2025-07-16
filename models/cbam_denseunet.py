@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from models.cbam import CBAM
-from models.dense import Denseblock
+from models.dense import DenseBlock
 class CBAM_DenseUNet(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
         super().__init__()
