@@ -22,7 +22,7 @@ train_loader = DataLoader(train_data, **config["train"]["dataloader"]["args"])
 optimizer = get_optimizer(model, lr=config["train"]["lr"])
 scheduler = get_scheduler(optimizer)
 # ✅ Loss Function
-loss_fn = totalloss()
+loss_fn = TotalLoss()
 # ✅ Logger
 logger = Logger()
 # ✅ Training Loop
