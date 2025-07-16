@@ -1,7 +1,7 @@
 # ✅ test.py
 import torch
 from torch.utils.data import DataLoader
-from models.cbam_denseunet import cbam_denseunet
+from models.CBAM_DenseUNet import CBAM_DenseUNet
 from dataset import cvccolondb
 from torchvision.utils import save_image
 import os, json
@@ -9,7 +9,7 @@ import os, json
 with open("config.json") as f:
     config = json.load(f)
 # Init model
-model = cbam_denseunet(**config["model"]["which_model"]["args"]).cuda()
+model =  CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
 model.load_state_dict(torch.load(os.path.join(config["test"]["model_path"], config["test"]["model_name"])))
 model.eval()
 # Test set
@@ -22,4 +22,4 @@ with torch.no_grad():
         low = batch["low"].cuda()
         output = model(low)
         save_image(output, os.path.join(config["test"]["output_images_path"], f"output_{i}.png"))
-print("✅ Test images saved to:", config["test"]["output_images_path"])
+print("Test images saved to:", config["test"]["output_images_path"])
