@@ -2,9 +2,9 @@ import os
 from PIL import Image, ImageEnhance
 from tqdm import tqdm
 # Paths
-input_dir = '/content/cvc-colondb'  # Raw cvc-colondb images
-output_low = '/content/cvc-colondb/train/low'
-output_high = '/content/cvc-colondb/train/high'
+input_dir = '/content/cvccolondb'  # Raw cvc-colondb images
+output_low = '/content/cvccolondb/train/low'
+output_high = '/content/cvccolondb/train/high'
 # Create directories
 os.makedirs(output_low, exist_ok=True)
 os.makedirs(output_high, exist_ok=True)
