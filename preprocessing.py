@@ -2,7 +2,7 @@ import os
 from PIL import Image, ImageEnhance
 from tqdm import tqdm
 # Paths
-input_dir = '/content/cvc-colondb/images'  # Raw CVC-ColonDB images
+input_dir = '/content/cvc-colondb'  # Raw CVC-ColonDB images
 output_low = '/content/cvc-colondb/train/low'
 output_high = '/content/cvc-colondb/train/high'
 # Create directories
