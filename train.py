@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
-from dataset import cvc-colondb
+from dataset import cvccolondb
 from utils.loss_utils import TotalLoss # ✅ Custom total loss function
 from utils.hyperparameter_tuning import get_optimizer, get_scheduler, update_loss_weights
 from utils.reproducibility import set_seed
@@ -16,7 +16,7 @@ with open("config.json") as f:
 # ✅ Initialize model
 model = CBAM_DenseUNet(**config["model"]["which_model"]["args"]).cuda()
 # ✅ Dataset and DataLoader
-train_data = cvc-colondb(**config["train"]["dataset"]["args"])
+train_data = cvccolondb(**config["train"]["dataset"]["args"])
 train_loader = DataLoader(train_data, **config["train"]["dataloader"]["args"])
 # ✅ Optimizer and Scheduler
 optimizer = get_optimizer(model, lr=config["train"]["lr"])
