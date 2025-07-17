@@ -4,12 +4,12 @@ import torch
 #Add project path (for Colab or custom path)
 sys.path.append('/content/CbamDenseUNet') 
 #Import local modules
-import main as train
+import main as training
 import test
 #import validation  # Uncomment if needed
 from dataset import PairedDataset 
 from torch.utils.data import DataLoader
-from models.cbam_denseunet import CBAM_DenseUNet
+from models.cbam_denseunet import cbam_denseunet
 from utils.loss_utils import TotalLoss
 from utils.hyperparameter_tuning import LOSS_WEIGHTS
 from utils.parser import get_config  #Load config from parser
