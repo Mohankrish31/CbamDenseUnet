@@ -18,7 +18,8 @@
     "args": {
       "low_dir": "/content/CVC-ColonDB-Split/test/low",
       "high_dir": "/content/CVC-ColonDB-Split/test/high",
-      "transform": false
+      "transform": false,
+      "paired": true
     }
   },
   "dataloader": {
