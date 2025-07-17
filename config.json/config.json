@@ -1,1 +1,44 @@
-
+{
+  "run_mode": "train",
+  "train": {
+    "dataset": {
+      "args": {
+        "low_light_root": "/content/CbamDenseUNet/data/train/low_light_images",
+        "normal_light_root": "/content/CbamDenseUNet/data/train/normal_light_images",
+        "image_size": [224, 224]
+      }
+    },
+    "dataloader": {
+      "args": {
+        "batch_size": 4,
+        "shuffle": true,
+        "num_workers": 2
+      }
+    },
+    "lr": 0.0001,
+    "epochs": 100,
+    "device": "cuda"
+  },
+  "test": {
+    "model_path": "/content/CbamDenseUNet/checkpoints/best_model.pth",
+    "input_dir": "/content/CbamDenseUNet/data/test/input",
+    "output_dir": "/content/CbamDenseUNet/data/test/output"
+  },
+  "validate": {
+    "model_path": "/content/CbamDenseUNet/checkpoints/best_model.pth",
+    "dataset": {
+      "args": {
+        "low_light_root": "/content/CbamDenseUNet/data/val/low_light_images",
+        "normal_light_root": "/content/CbamDenseUNet/data/val/normal_light_images",
+        "image_size": [224, 224]
+      }
+    },
+    "dataloader": {
+      "args": {
+        "batch_size": 1,
+        "shuffle": false,
+        "num_workers": 1
+      }
+    }
+  }
+}
