@@ -4,7 +4,7 @@ import os
 import json
 from torch.utils.data import DataLoader
 from models import CBAM_DenseUNet
-from dataset import cvc-colondb
+from dataset import cvccolondb
 from loss_utils import CombinedLoss
 from torchvision.utils import save_image
 # --------- Argument Parser ---------
@@ -22,7 +22,7 @@ model = CBAM_DenseUNet(**model_args).cuda()
 if args.mode == 'train':
     dataset_args = config["train"]["dataset"]["args"]
     dataloader_args = config["train"]["dataloader"]["args"]
-    train_data = cvc-colondb(**dataset_args)
+    train_data = cvccolondb(**dataset_args)
     train_loader = DataLoader(train_data, **dataloader_args)
     optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
     loss_fn = CombinedLoss()
@@ -48,7 +48,7 @@ elif args.mode == 'val':
     model.eval()
     dataset_args = config["val"]["dataset"]["args"]
     dataloader_args = config["val"]["dataloader"]["args"]
-    val_data = cvc-colondb(**dataset_args)
+    val_data = cvccolondb(**dataset_args)
     val_loader = DataLoader(val_data, **dataloader_args)
     total_loss = 0.0
     with torch.no_grad():
@@ -63,7 +63,7 @@ elif args.mode == 'test':
     model.eval()
     dataset_args = config["test"]["dataset"]["args"]
     dataloader_args = config["test"]["dataloader"]["args"]
-    test_data = cvc-colondb(**dataset_args)
+    test_data = cvccolondb(**dataset_args)
     test_loader = DataLoader(test_data, **dataloader_args)
     os.makedirs(config["test"]["output_images_path"], exist_ok=True)
     with torch.no_grad():
