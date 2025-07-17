@@ -7,7 +7,7 @@ sys.path.append('/content/CbamDenseUNet')
 import main as train
 import test
 #import validation  # Uncomment if needed
-from data.dataset import PairedDataset 
+from dataset import PairedDataset 
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
 from utils.loss_utils import TotalLoss
