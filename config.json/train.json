@@ -1,34 +1,63 @@
 {
+  "name": "cbam_denseunet_config",
   "model": {
     "which_model": {
-       "name": "CBAM_DenseUNet",
+      "name": [
+        "models.cbam_denseunet",
+        "CBAM_DenseUNet"
+      ],
+      "args": {}
+    }
+  },
+  "train": {
+    "device": "cuda",
+    "n_epoch": 80,
+    "lr": 0.001,
+    "dataset": {
+      "name": [
+        "dataset.cvccolondb",
+        "cvccolondb"
+      ],
       "args": {
-        "in_channels": 3,
-        "out_channels": 3,
-        "features": 64
+        "low_light_root": "/content/cvc-colondb/train/low",
+        "normal_light_root": "/content/cvc-colondb/train/high",
+        "image_size": [224, 224]
       }
-    }
+    },
+    "dataloader": {
+      "args": {
+        "batch_size": 16,
+        "shuffle": true,
+        "num_workers": 2
+      }
+    },
+    "model_path": "saved_models/",
+    "model_name": "CBAM_DenseUNet.pt"
   },
-  "dataset": {
-    "args": {
-      "low_dir": "/content/cvc-colondb/train/low",
-      "high_dir": "/content/cvc-colondb/train/high",
-      "transform": true
-    }
-  },
-  "dataloader": {
-    "args": {
-      "batch_size": 4,
-      "shuffle": true,
-      "num_workers": 2,
-      "pin_memory": true
-    }
-  },
-  "lr": 0.0002,
-  "n_epoch": 50,
-  "model_path": "saved_models",
-  "model_name": "cbam_train_model.pth",
-  "save_to_drive": true
+  "test": {
+    "device": "cuda",
+    "dataset": {
+      "name": [
+        "dataset.cvccolondb",
+        "cvccolondb"
+      ],
+      "args": {
+        "low_light_root": "/content/cvc-colondb/test/low",
+        "normal_light_root": "/content/cvc-colondb/test/high",
+        "image_size": [224, 224]
+      },
+      "is_dataset_paired": true
+    },
+    "dataloader": {
+      "args": {
+        "batch_size": 1,
+        "shuffle": false,
+        "num_workers": 2
+      }
+    },
+    "apply_post_processing": false,
+    "model_path": "saved_models/",
+    "model_name": "CBAM_DenseUNet.pt",
+    "output_images_path": "output_images/"
+  }
 }
-
-
