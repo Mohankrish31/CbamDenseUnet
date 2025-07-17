@@ -35,9 +35,9 @@
     },
     "dataloader": {
       "args": {
-        "batch_size": 1,
+        "batch_size": 4,
         "shuffle": false,
-        "num_workers": 1
+        "num_workers": 2
       }
     }
   }
