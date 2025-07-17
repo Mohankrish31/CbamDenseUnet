@@ -23,7 +23,7 @@
   },
   "dataloader": {
     "args": {
-      "batch_size": 1,
+      "batch_size": 8,
       "shuffle": false,
       "num_workers": 2,
       "pin_memory": true
