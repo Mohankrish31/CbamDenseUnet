@@ -1,5 +1,5 @@
 {
-  "name": "cbam_test",
+  "name": "default",
   "mode": "test",
   "device": {
     "name": "cuda"
