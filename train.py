@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
 from dataset.cvccolondb import cvccolondb
-from utils.loss_utils import TotalLoss # ✅ Custom total loss function
+from utils.loss_utils import loss_utils
 from utils.hyperparameter_tuning import get_optimizer, get_scheduler, update_loss_weights
 from utils.reproducibility import set_seed
 from utils.logger import Logger  # ✅ Logger added
