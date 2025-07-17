@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import DataLoader
 from models.cbam_denseunet import CBAM_DenseUNet
 from dataset.cvccolondb import cvccolondb
-from utils.loss_utils import TotalLoss  # ✅ Import your total loss function
+from utils.loss_utils import loss_utils  
 import os
 import json
 # Load config
