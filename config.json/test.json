@@ -1,4 +1,9 @@
 {
+  "name": "cbam_test",
+  "mode": "test",
+  "device": {
+    "name": "cuda"
+  },
   "model": {
     "which_model": {
       "name": "CBAM_DenseUNet",
@@ -11,20 +16,23 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/cvc-colondb/test/low",
-      "high_dir": "/content/cvc-colondb/test/high",
+      "low_dir": "/content/CVC-ColonDB-Split/test/low",
+      "high_dir": "/content/CVC-ColonDB-Split/test/high",
       "transform": false
     }
   },
   "dataloader": {
     "args": {
-      "batch_size": 4,
+      "batch_size": 1,
       "shuffle": false,
       "num_workers": 2,
       "pin_memory": true
     }
   },
-  "model_path": "saved_models",
-  "model_name": "cbam_train_model.pth"
+  "model_path": "saved_models/cbam_train_model.pth",
+  "output_dir": "outputs/test_enhanced",
+  "training_info": {
+    "epoch": 100,
+    "learning_rate": 0.0001
+  }
 }
-
