@@ -1,58 +1,59 @@
-import sys
 import os
+import json
 import torch
-#Add project path (for Colab or custom path)
-sys.path.append('/content/CbamDenseUNet') 
-#Import local modules
-import main as training
-import test
-#import validation  # Uncomment if needed
-from dataset import PairedDataset 
 from torch.utils.data import DataLoader
-from models.cbam_denseunet import cbam_denseunet
-from utils.loss_utils import TotalLoss
-from utils.hyperparameter_tuning import LOSS_WEIGHTS
-from utils.parser import get_config  #Load config from parser
-def main():
-    #Get config (with argparse and json loading)
-    config = get_config()
-    device = torch.device(config.get("train", {}).get("device", "cuda" if torch.cuda.is_available() else "cpu"))
-    #Determine operation mode
-    mode = config.get("run_mode", "train")  # Default to train if not specified
-    if mode == 'train':
-        # >>>––––– BEGIN DATA SECTION ––––––>>>
-        train_dataset = PairedDataset(
-            low_light_root    = config["train"]["dataset"]["args"]["low_light_root"],
-            normal_light_root = config["train"]["dataset"]["args"]["normal_light_root"],
-            image_size        = config["train"]["dataset"]["args"].get("image_size", [224, 224])
-        )
-        print("Length of PairedDataset:", len(train_dataset))
-        train_loader = DataLoader(
-            train_dataset,
-            batch_size  = config["train"]["dataloader"]["args"]["batch_size"],
-            shuffle     = config["train"]["dataloader"]["args"]["shuffle"],
-            num_workers = config["train"]["dataloader"]["args"]["num_workers"],
-            pin_memory  = True
-        )
-        # <<<––––– END DATA SECTION ––––––<<<
-        # Load Model
-        model = CBAM_DenseUNet().to(device)
-        # Optimizer
-        optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
-        # Loss Function
-        criterion = TotalLoss(
-            device,
-            w_mse   = LOSS_WEIGHTS["mse"],
-            w_ssim  = LOSS_WEIGHTS["ssim"],
-            w_lpips = LOSS_WEIGHTS["lpips"],
-            w_edge  = LOSS_WEIGHTS["edge"]
-        )
-        # Train Model
-        train.train(config, train_loader, optimizer, criterion, device, model)
-    elif mode == 'test':
-        test.test(config)
-    elif mode == 'validate':
-        import validation
-        valid.validate(config)
-if __name__ == '__main__':
-    main()
+from dataset import cvccolondb  # Replace with your actual dataset class file name
+from models.CBAM_DenseUNet import CBAM_DenseUNet  # Make sure this path is correct
+from loss_utils import MSE_SSIM_Loss  # Replace with your loss combination
+from utils import save_results, validate_model  # Implement as needed (saving output, metrics etc.)
+from train_utils import train_one_epoch  # Utility for training one epoch
+def load_model(config):
+    args = config["model"]["which_model"]["args"]
+    model = CBAM_DenseUNet(**args)
+    return model
+def load_dataset(config):
+    dataset_args = config["dataset"]["args"]
+    return cvccolondb(**dataset_args)
+def load_dataloader(config, dataset):
+    dataloader_args = config["dataloader"]["args"]
+    return DataLoader(dataset, **dataloader_args)
+def main(config_path):
+    # Load JSON config
+    with open(config_path, "r") as f:
+        config = json.load(f)
+    mode = config["mode"]
+    device = torch.device(config["device"]["name"] if torch.cuda.is_available() else "cpu")
+    model = load_model(config).to(device)
+    # Load dataset and dataloader
+    dataset = load_dataset(config)
+    dataloader = load_dataloader(config, dataset)
+    # Load model weights if not training
+    if mode != "train":
+        model_path = config.get("model_path", os.path.join(config["model_path"], config["model_name"]))
+        model.load_state_dict(torch.load(model_path, map_location=device))
+        model.eval()
+    if mode == "train":
+        epochs = config["training_info"]["epoch"]
+        lr = config["training_info"]["learning_rate"]
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        loss_fn = MSE_SSIM_Loss()
+        for epoch in range(epochs):
+            train_loss = train_one_epoch(model, dataloader, optimizer, loss_fn, device)
+            print(f"Epoch [{epoch+1}/{epochs}] - Train Loss: {train_loss:.4f}")
+            # Optionally save checkpoints
+            torch.save(model.state_dict(), config["model_path"])
+    elif mode == "test":
+        output_dir = config["output_dir"]
+        os.makedirs(output_dir, exist_ok=True)
+        save_results(model, dataloader, output_dir, device)
+    elif mode == "valid":
+        validate_model(model, dataloader, device)
+    else:
+        print("Invalid mode! Use one of: train, valid, test.")
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: python run.py path_to_config.json")
+        exit(1)
+    config_file = sys.argv[1]
+    main(config_file)
