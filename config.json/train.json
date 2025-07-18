@@ -16,22 +16,22 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/cvccolondbsplit/train/low",
-      "high_dir": "/content/cvccolondbsplit/train/high",
-      "transform": true,
+      "low_dir": "/content/cvccolondbsplit/test/low",
+      "high_dir": "/content/cvccolondbsplit/test/high",
+      "transform": false,
       "paired": true
     }
   },
   "dataloader": {
     "args": {
       "batch_size": 8,
-      "shuffle": true,
+      "shuffle": false,
       "num_workers": 2,
       "pin_memory": true
     }
   },
+  "model_path": "saved_models/cbam_denseunet.pt",
   "output_dir": "outputs/train_enhanced",
-  "model_path": "saved_models/cbam_train_model.pth",
   "training_info": {
     "epoch": 100,
     "learning_rate": 0.0001
