@@ -29,6 +29,13 @@
       "pin_memory": true
     }
   },
+  "output_dir": "outputs/valid_enhanced",
+  "model_path": "saved_models/cbam_train_model.pth",
+  "training_info": {
+    "epoch": 100,
+    "learning_rate": 0.0001
+  }
+}
   "model_path": "saved_models",
   "model_name": "cbam_train_model.pth"
 }
