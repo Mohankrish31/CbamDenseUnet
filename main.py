@@ -5,7 +5,7 @@ import json
 from torch.utils.data import DataLoader
 from models import CBAM_DenseUNet
 from dataset import cvccolondbsplit
-from loss_utils import CombinedLoss
+from loss_utils import TotalLoss
 from torchvision.utils import save_image
 # --------- Argument Parser ---------
 parser = argparse.ArgumentParser()
@@ -25,7 +25,7 @@ if args.mode == 'train':
     train_data = cvccolondbsplit(**dataset_args)
     train_loader = DataLoader(train_data, **dataloader_args)
     optimizer = torch.optim.Adam(model.parameters(), lr=config["train"]["lr"])
-    loss_fn = CombinedLoss()
+    loss_fn = TotalLoss()
     n_epoch = config["train"]["n_epoch"]
     for epoch in range(n_epoch):
         model.train()
