@@ -16,8 +16,8 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/CVC-ColonDB-Split/test/low",
-      "high_dir": "/content/CVC-ColonDB-Split/test/high",
+      "low_dir": "/content/cvccolondbsplit/test/low",
+      "high_dir": "/content/cvccolondbsplit/test/high",
       "transform": false,
       "paired": true
     }
