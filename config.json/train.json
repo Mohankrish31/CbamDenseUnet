@@ -16,8 +16,8 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/cvccolondbsplit/test/low",
-      "high_dir": "/content/cvccolondbsplit/test/high",
+      "low_dir": "/content/cvccolondbsplit/train/low",
+      "high_dir": "/content/cvccolondbsplit/train/high",
       "transform": false,
       "paired": true
     }
