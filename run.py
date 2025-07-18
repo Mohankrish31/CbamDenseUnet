@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from dataset.cvccolondbsplit import CVCColonDBSplit  # Make sure this matches your folder name
+from dataset.cvccolondbsplit import cvccolondbsplit  # Make sure this matches your folder name
 from models.CBAM_DenseUNet import CBAM_DenseUNet
 from totalloss import TotaLoss  # Your custom loss
 from utils import save_results, validate_model  # Optional utilities
@@ -17,9 +17,9 @@ def main():
     model = CBAM_DenseUNet(in_channels=3, out_channels=3, features=64).to(device)
     # Dataset & DataLoader
     if mode == "train":
-        train_dataset = CVCColonDBSplit(config["dataset"]["args"]["low"], config["dataset"]["args"]["high"])
+        train_dataset = cvccolondbsplit(config["dataset"]["args"]["low"], config["dataset"]["args"]["high"])
         train_loader = DataLoader(train_dataset, batch_size=config["training_info"]["batch_size"], shuffle=True)
-        val_dataset = CVCColonDBSplit(config["dataset"]["args"]["val_low"], config["dataset"]["args"]["val_high"])
+        val_dataset = cvccolondbsplit(config["dataset"]["args"]["val_low"], config["dataset"]["args"]["val_high"])
         val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
         # Loss and Optimizer
         loss_fn = TotaLoss()  # Combined MSE, SSIM, LPIPS, Edge Loss
@@ -31,7 +31,7 @@ def main():
             # Validation
             evaluate(model, val_loader, loss_fn, device)
     elif mode == "test":
-        test_dataset = CVCColonDBSplit(config["dataset"]["args"]["test_low"], config["dataset"]["args"]["test_high"])
+        test_dataset = cvccolondbsplit(config["dataset"]["args"]["test_low"], config["dataset"]["args"]["test_high"])
         test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         model.load_state_dict(torch.load(config["testing"]["model_path"], map_location=device))
         model.eval()
