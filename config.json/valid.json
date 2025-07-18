@@ -1,4 +1,10 @@
 {
+  "name": "default",
+  "mode": "valid",
+  "device": {
+    "name": "cuda"
+  },
+{
   "model": {
     "which_model": {
       "args": {
