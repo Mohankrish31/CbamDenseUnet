@@ -2,7 +2,7 @@ import os
 import json
 import torch
 from torch.utils.data import DataLoader
-from dataset import cvccolondb  # Replace with your actual dataset class file name
+from dataset import cvccolondbsplit  # Replace with your actual dataset class file name
 from models.CBAM_DenseUNet import CBAM_DenseUNet  # Make sure this path is correct
 from loss_utils import MSE_SSIM_Loss  # Replace with your loss combination
 from utils import save_results, validate_model  # Implement as needed (saving output, metrics etc.)
@@ -13,7 +13,7 @@ def load_model(config):
     return model
 def load_dataset(config):
     dataset_args = config["dataset"]["args"]
-    return cvccolondb(**dataset_args)
+    return cvccolondbsplit (**dataset_args)
 def load_dataloader(config, dataset):
     dataloader_args = config["dataloader"]["args"]
     return DataLoader(dataset, **dataloader_args)
