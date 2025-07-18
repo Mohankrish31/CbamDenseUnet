@@ -16,14 +16,14 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/cvc-colondb/val/low",
-      "high_dir": "/content/cvc-colondb/val/high",
+      "low_dir": "/content/cvccolondbsplit/val/low",
+      "high_dir": "/content/cvccolondbsplit/val/high",
       "transform": false
     }
   },
   "dataloader": {
     "args": {
-      "batch_size": 4,
+      "batch_size": 8,
       "shuffle": false,
       "num_workers": 2,
       "pin_memory": true
