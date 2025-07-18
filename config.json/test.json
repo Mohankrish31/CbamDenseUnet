@@ -30,7 +30,7 @@
       "pin_memory": true
     }
   },
-  "model_path": "saved_models/cbam_train_model.pth",
+  "model_path": "saved_models/cbam_denseunet.pt",
   "output_dir": "outputs/test_enhanced",
   "training_info": {
     "epoch": 100,
