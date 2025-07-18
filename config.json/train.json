@@ -1,5 +1,5 @@
 {
-  "name": "default_train",
+  "name": "default",
   "mode": "train",
   "device": {
     "name": "cuda"
