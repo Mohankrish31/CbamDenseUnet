@@ -16,8 +16,8 @@
   },
   "dataset": {
     "args": {
-      "low_dir": "/content/CVC-ColonDB-Split/train/low",
-      "high_dir": "/content/CVC-ColonDB-Split/train/high",
+      "low_dir": "/content/cvccolondbsplit/train/low",
+      "high_dir": "/content/cvccolondbsplit/train/high",
       "transform": true,
       "paired": true
     }
@@ -30,7 +30,7 @@
       "pin_memory": true
     }
   },
-  "output_dir": "outputs/train_logs",
+  "output_dir": "outputs/train_enhanced",
   "model_path": "saved_models/cbam_train_model.pth",
   "training_info": {
     "epoch": 100,
