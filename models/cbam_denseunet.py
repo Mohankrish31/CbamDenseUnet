@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from models.cbam import CBAM
-from models.dense import DenseBlock
-class CBAM_DenseUNet(nn.Module):
+from models.cbam import cbam
+from models.dense import denseblock
+class cbam_denseunet(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
         super().__init__()
         self.encoder = nn.Sequential(
