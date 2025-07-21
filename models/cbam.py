@@ -25,7 +25,7 @@ class SpatialAttention(nn.Module):
         max_out, _ = torch.max(x, dim=1, keepdim=True)
         x = torch.cat([avg_out, max_out], dim=1)
         return self.sigmoid(self.conv(x))
-class CBAM(nn.Module):
+class cbam(nn.Module):
     def __init__(self, channels, ratio=8):
         super().__init__()
         self.ca = ChannelAttention(channels, ratio)
