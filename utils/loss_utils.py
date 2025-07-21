@@ -1,43 +1,31 @@
+# loss_utils.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lpips import LPIPS
 from pytorch_msssim import ssim
-class TotaLoss(nn.Module):
-    def __init__(self, lpips_net='vgg', weights=None):
-        super(totalloss, self).__init__()
-        self.mse = nn.MSELoss()  # fixed case
-        self.lpips = LPIPS(net=lpips_net)
-        self.lpips.eval()  #  Optional but recommended for consistency
-        self.weights = weights if weights else {
-            "mse": 1.0,
-            "ssim": 1.0,
-            "lpips": 0.5,
-            "edge": 0.5
-        }
-    def sobel_edge_loss(self, x, y):
-        sobel_x = torch.tensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]],
-                               dtype=torch.float32, device=x.device).view(1, 1, 3, 3)
-        sobel_y = torch.tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]],
-                               dtype=torch.float32, device=x.device).view(1, 1, 3, 3)
-        def apply_sobel(img):
-            if img.shape[1] != 1:
-                img = img.mean(dim=1, keepdim=True)  # Convert to grayscale
-            gx = F.conv2d(img, sobel_x, padding=1)
-            gy = F.conv2d(img, sobel_y, padding=1)
-            return torch.sqrt(gx ** 2 + gy ** 2 + 1e-6)
-        edge_x = apply_sobel(x)
-        edge_y = apply_sobel(y)
-        return F.l1_loss(edge_x, edge_y)
-    def forward(self, output, target):
-        loss_mse = self.mse(output, target)
-        loss_ssim = 1 - ssim(output, target, data_range=1.0, size_average=True)
-        loss_lpips = self.lpips(output, target).mean()
-        loss_edge = self.sobel_edge_loss(output, target)
-        total = (
-            self.weights["mse"] * loss_mse +
-            self.weights["ssim"] * loss_ssim +
-            self.weights["lpips"] * loss_lpips +
-            self.weights["edge"] * loss_edge
-        )
-        return total, loss_mse, loss_ssim, loss_lpips, loss_edge
+
+class SSIMLoss(nn.Module):
+    def __init__(self):
+        super(SSIMLoss, self).__init__()
+
+    def forward(self, pred, target):
+        return ssim(pred, target, data_range=1.0, size_average=True)
+
+class EdgeLoss(nn.Module):
+    def __init__(self):
+        super(EdgeLoss, self).__init__()
+        self.kernel = torch.tensor([[-1, -1, -1],
+                                    [-1,  8, -1],
+                                    [-1, -1, -1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        self.kernel = self.kernel.repeat(3, 1, 1, 1)
+        self.kernel.requires_grad = False
+
+    def forward(self, pred, target):
+        if pred.shape[1] == 1:  # Grayscale
+            pred_edge = F.conv2d(pred, self.kernel[0:1].to(pred.device), padding=1)
+            target_edge = F.conv2d(target, self.kernel[0:1].to(target.device), padding=1)
+        else:  # RGB
+            pred_edge = F.conv2d(pred, self.kernel.to(pred.device), groups=3, padding=1)
+            target_edge = F.conv2d(target, self.kernel.to(target.device), groups=3, padding=1)
+
+        return F.l1_loss(pred_edge, target_edge)
