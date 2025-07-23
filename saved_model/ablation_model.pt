@@ -1,0 +1,26 @@
+import torch
+from models.unet import unet
+from models.denseunet import denseunet
+from models.cbam_denseunet import denseunet_cbam
+
+# Define device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Define models
+models = {
+    'BaselineUNet': unet().to(device),
+    'DenseUNet': denseunet().to(device),
+    'DenseUNet_CBAM': denseunet_cbam().to(device),
+    'DenseUNet_wo_CBAM': denseunet(cbam=False).to(device)
+}
+
+# Load each model's weights
+for name, model in models.items():
+    path = f"/content/saved_models_ablation/{name}.pt"
+    model.load_state_dict(torch.load(path, map_location=device))
+
+# Save all models in one file
+ablation_dict = {name: model.state_dict() for name, model in models.items()}
+torch.save(ablation_dict, "/content/saved_models_ablation/ablation_models.pt")
+
+print("✅ Saved all ablation models into ablation_models.pt")
