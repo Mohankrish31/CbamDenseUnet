@@ -1,60 +1,49 @@
+# models/baseline_unet.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class UNet(nn.Module):
-    def __init__(self, in_channels=3, out_channels=3, features=[64, 128, 256, 512]):
-        super(UNet, self).__init__()
-        self.encoder = nn.ModuleList()
-        self.decoder = nn.ModuleList()
-
-        # Encoder
-        for feature in features:
-            self.encoder.append(self._block(in_channels, feature))
-            in_channels = feature
-
-        # Bottleneck
-        self.bottleneck = self._block(features[-1], features[-1]*2)
-
-        # Decoder
-        for feature in reversed(features):
-            self.decoder.append(
-                nn.ConvTranspose2d(feature*2, feature, kernel_size=2, stride=2)
-            )
-            self.decoder.append(self._block(feature*2, feature))
-
-        self.final_conv = nn.Conv2d(features[0], out_channels, kernel_size=1)
-
-    def forward(self, x):
-        skip_connections = []
-
-        for layer in self.encoder:
-            x = layer(x)
-            skip_connections.append(x)
-            x = F.max_pool2d(x, 2)
-
-        x = self.bottleneck(x)
-        skip_connections = skip_connections[::-1]
-
-        for i in range(0, len(self.decoder), 2):
-            x = self.decoder[i](x)
-            skip_connection = skip_connections[i // 2]
-
-            if x.shape != skip_connection.shape:
-                x = F.interpolate(x, size=skip_connection.shape[2:])
-
-            x = torch.cat((skip_connection, x), dim=1)
-            x = self.decoder[i+1](x)
-
-        return self.final_conv(x)
-
-    def _block(self, in_channels, out_channels):
-        return nn.Sequential(
+class UNetBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.double_conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, 3, padding=1),
-            nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels, 3, padding=1),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=True)
         )
 
+    def forward(self, x):
+        return self.double_conv(x)
+
+class UNet(nn.Module):
+    def __init__(self, in_channels=3, out_channels=3):
+        super().__init__()
+        self.enc1 = UNetBlock(in_channels, 64)
+        self.enc2 = UNetBlock(64, 128)
+        self.enc3 = UNetBlock(128, 256)
+        self.pool = nn.MaxPool2d(2)
+
+        self.bottleneck = UNetBlock(256, 512)
+
+        self.up3 = nn.ConvTranspose2d(512, 256, 2, stride=2)
+        self.dec3 = UNetBlock(512, 256)
+        self.up2 = nn.ConvTranspose2d(256, 128, 2, stride=2)
+        self.dec2 = UNetBlock(256, 128)
+        self.up1 = nn.ConvTranspose2d(128, 64, 2, stride=2)
+        self.dec1 = UNetBlock(128, 64)
+
+        self.out_conv = nn.Conv2d(64, out_channels, kernel_size=1)
+
+    def forward(self, x):
+        e1 = self.enc1(x)
+        e2 = self.enc2(self.pool(e1))
+        e3 = self.enc3(self.pool(e2))
+
+        b = self.bottleneck(self.pool(e3))
+
+        d3 = self.dec3(torch.cat([self.up3(b), e3], dim=1))
+        d2 = self.dec2(torch.cat([self.up2(d3), e2], dim=1))
+        d1 = self.dec1(torch.cat([self.up1(d2), e1], dim=1))
+
+        return self.out_conv(d1)
