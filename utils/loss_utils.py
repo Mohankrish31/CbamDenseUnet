@@ -1,31 +1,24 @@
-# loss_utils.py
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+import lpips
+import kornia
 from pytorch_msssim import ssim
 
-class SSIMLoss(nn.Module):
-    def __init__(self):
-        super(SSIMLoss, self).__init__()
+# ✅ MSE Loss
+def mse_loss(pred, target):
+    return F.mse_loss(pred, target)
 
-    def forward(self, pred, target):
-        return ssim(pred, target, data_range=1.0, size_average=True)
+# ✅ SSIM Loss
+def ssim_loss(pred, target):
+    return 1 - ssim(pred, target, data_range=1.0, size_average=True)
 
-class EdgeLoss(nn.Module):
-    def __init__(self):
-        super(EdgeLoss, self).__init__()
-        self.kernel = torch.tensor([[-1, -1, -1],
-                                    [-1,  8, -1],
-                                    [-1, -1, -1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-        self.kernel = self.kernel.repeat(3, 1, 1, 1)
-        self.kernel.requires_grad = False
+# ✅ LPIPS Loss using VGG
+lpips_vgg = lpips.LPIPS(net='vgg').to('cuda' if torch.cuda.is_available() else 'cpu')
+def lpips_loss_vgg(pred, target):
+    return lpips_vgg(pred, target).mean()
 
-    def forward(self, pred, target):
-        if pred.shape[1] == 1:  # Grayscale
-            pred_edge = F.conv2d(pred, self.kernel[0:1].to(pred.device), padding=1)
-            target_edge = F.conv2d(target, self.kernel[0:1].to(target.device), padding=1)
-        else:  # RGB
-            pred_edge = F.conv2d(pred, self.kernel.to(pred.device), groups=3, padding=1)
-            target_edge = F.conv2d(target, self.kernel.to(target.device), groups=3, padding=1)
-
-        return F.l1_loss(pred_edge, target_edge)
+# ✅ Sobel Edge Loss
+def edge_loss_sobel(pred, target):
+    pred_edges = kornia.filters.Sobel()(pred)
+    target_edges = kornia.filters.Sobel()(target)
+    return F.l1_loss(pred_edges, target_edges)
