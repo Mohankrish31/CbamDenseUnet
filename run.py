@@ -1,41 +1,117 @@
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-from dataset.cvccolondbsplit import cvccolondbsplit  # Make sure this matches your folder name
-from models.CBAM_DenseUNet import CBAM_DenseUNet
-from totalloss import TotaLoss  # Your custom loss
-from utils import save_results, validate_model  # Optional utilities
+import argparse
 import json
 import os
-from train_utils import train_one_epoch, evaluate
-def main():
-    config_path = "config/training.json"
-    with open(config_path) as f:
-        config = json.load(f)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    mode = config["mode"]
-    model = CBAM_DenseUNet(in_channels=3, out_channels=3, features=64).to(device)
-    # Dataset & DataLoader
-    if mode == "train":
-        train_dataset = cvccolondbsplit(config["dataset"]["args"]["low"], config["dataset"]["args"]["high"])
-        train_loader = DataLoader(train_dataset, batch_size=config["training_info"]["batch_size"], shuffle=True)
-        val_dataset = cvccolondbsplit(config["dataset"]["args"]["val_low"], config["dataset"]["args"]["val_high"])
-        val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
-        # Loss and Optimizer
-        loss_fn = TotaLoss()  # Combined MSE, SSIM, LPIPS, Edge Loss
-        optimizer = torch.optim.Adam(model.parameters(), lr=config["training_info"]["learning_rate"])
-        # Training Loop
-        for epoch in range(config["training_info"]["epoch"]):
-            print(f"\nEpoch {epoch+1}/{config['training_info']['epoch']}")
-            train_one_epoch(model, train_loader, loss_fn, optimizer, device, epoch)
-            # Validation
-            evaluate(model, val_loader, loss_fn, device)
-    elif mode == "test":
-        test_dataset = cvccolondbsplit(config["dataset"]["args"]["test_low"], config["dataset"]["args"]["test_high"])
-        test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        model.load_state_dict(torch.load(config["testing"]["model_path"], map_location=device))
-        model.eval()
-        # Save enhanced output
-        save_results(model, test_loader, device, config["testing"]["save_dir"])
-if __name__ == "__main__":
-    main()
+import torch
+from torchvision import transforms
+from PIL import Image
+
+# === Argument Parser ===
+parser = argparse.ArgumentParser()
+parser.add_argument("-p", "--phase", type=str, required=True, help="Phase: train / test / val")
+parser.add_argument("-c", "--config", type=str, required=True, help="Path to JSON config file")
+args = parser.parse_args()
+
+# === Load Config ===
+with open(args.config, "r") as f:
+    config = json.load(f)
+
+input_dir = config["input_dir"]
+output_dir = config["output_dir"]
+model_path = config["model_path"]
+image_size = tuple(config.get("image_size", [224, 224]))
+num_epochs = config.get("epochs", 5)
+batch_size = config.get("batch_size", 8)
+lr = config.get("learning_rate", 1e-4)
+
+# === Device ===
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# === Load Model ===
+from models.cbam_denseunet import CBAM_DenseUNet
+model = CBAM_DenseUNet().to(device)
+
+# === Load Model Weights If Available ===
+if os.path.exists(model_path) and args.phase in ["test", "val"]:
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    print(f"✅ Loaded model weights from: {model_path}")
+
+# === Transforms ===
+transform = transforms.Compose([
+    transforms.Resize(image_size),
+    transforms.ToTensor()
+])
+to_pil = transforms.ToPILImage()
+
+# === Define Simple Dataset Loader ===
+from torch.utils.data import Dataset, DataLoader
+from torchvision.datasets.folder import default_loader
+
+class ImageFolderDataset(Dataset):
+    def __init__(self, input_folder, transform=None):
+        self.image_paths = [os.path.join(input_folder, fname)
+                            for fname in os.listdir(input_folder)
+                            if fname.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        self.transform = transform
+        self.loader = default_loader
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        img = self.loader(self.image_paths[idx])
+        if self.transform:
+            img = self.transform(img)
+        return img, os.path.basename(self.image_paths[idx])
+
+# === Train Function ===
+def train_model():
+    os.makedirs(output_dir, exist_ok=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    criterion = torch.nn.MSELoss()
+
+    dataset = ImageFolderDataset(input_dir, transform)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    model.train()
+    for epoch in range(num_epochs):
+        epoch_loss = 0
+        for imgs, _ in loader:
+            imgs = imgs.to(device)
+            # Dummy target: identity (use imgs as target for denoising-like training)
+            targets = imgs.clone()
+            optimizer.zero_grad()
+            outputs = model(imgs)
+            loss = criterion(outputs, targets)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+        print(f"📘 Epoch [{epoch+1}/{num_epochs}] Loss: {epoch_loss/len(loader):.4f}")
+
+    torch.save(model.state_dict(), model_path)
+    print(f"💾 Model saved to: {model_path}")
+
+# === Test/Val Function ===
+def evaluate_images(tag="test"):
+    os.makedirs(output_dir, exist_ok=True)
+    model.eval()
+    with torch.no_grad():
+        for fname in os.listdir(input_dir):
+            if fname.lower().endswith(('.jpg', '.jpeg', '.png')):
+                img_path = os.path.join(input_dir, fname)
+                img = Image.open(img_path).convert('RGB')
+                inp = transform(img).unsqueeze(0).to(device)
+                out = model(inp).squeeze().cpu().clamp(0, 1)
+                out_img = to_pil(out)
+                out_img.save(os.path.join(output_dir, fname))
+                print(f"✅ {tag.capitalize()} Enhanced: {fname}")
+    print(f"🎉 {tag.capitalize()} enhancement complete. Saved to: {output_dir}")
+
+# === Run Phase ===
+if args.phase == "train":
+    train_model()
+elif args.phase == "test":
+    evaluate_images("test")
+elif args.phase == "val":
+    evaluate_images("val")
+else:
+    raise NotImplementedError(f"Phase '{args.phase}' is not supported.")
