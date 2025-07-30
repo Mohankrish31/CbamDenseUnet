@@ -1,35 +1,6 @@
-import os
-import torch
-from torchvision import transforms
-from PIL import Image
-# -------- Paths --------
-input_dir = "/content/cvccolondbsplit/test/low"             # Path to low-light testing images
-output_dir = "/content/outputs/test_enhanced"               # Output folder for enhanced testing images
-model_path = "/content/saved_models/cbam_denseunet.pt"      # Trained model (.pt)
-# -------- Create output directory if it doesn't exist --------
-os.makedirs(output_dir, exist_ok=True)
-# -------- Setup device --------
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# -------- Import model and load weights --------
-from models.cbam_denseunet import cbam_denseunet
-model = cbam_denseunet(in_channels=3, base_channels=64).to(device)
-model.load_state_dict(torch.load(model_path, map_location=device))
-model.eval()
-# -------- Define preprocessing and postprocessing --------
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),  # Resize to match model input size
-    transforms.ToTensor()
-])
-to_pil = transforms.ToPILImage()
-# -------- Enhance and save testing images --------
-with torch.no_grad():
-    for fname in os.listdir(input_dir):
-        if fname.lower().endswith(('.jpg', '.jpeg', '.png')):
-            img_path = os.path.join(input_dir, fname)
-            img = Image.open(img_path).convert('RGB')
-            inp = transform(img).unsqueeze(0).to(device)
-            out = model(inp).squeeze().cpu().clamp(0, 1)
-            out_img = to_pil(out)
-            out_img.save(os.path.join(output_dir, fname))
-            print(f"✅ Enhanced (test): {fname}")
-print("🎉 Testing image enhancement complete. Saved to:", output_dir)
+{
+  "input_dir": "/content/cvccolondbsplit/test/low",
+  "output_dir": "/content/outputs/test_enhanced",
+  "model_path": "/content/saved_models/cbam_denseunet.pt",
+  "image_size": [224, 224]
+}
