@@ -1,53 +1,69 @@
-import numpy as np
+import os
 import cv2
-import lpips
 import torch
-from skimage.metrics import structural_similarity as ssim_fn
+import lpips
+import numpy as np
+from tqdm import tqdm
+from skimage.metrics import structural_similarity as compare_ssim
+import math
 
-# Initialize LPIPS loss once
-loss_fn_alex = lpips.LPIPS(net='vgg').to("cuda" if torch.cuda.is_available() else "cpu")
+# === Initialize LPIPS === #
+lpips_fn = lpips.LPIPS(net='vgg').cuda()
 
-def cpsnr(img1, img2):
-    """Compute Contrast-aware PSNR"""
+def calculate_cpsnr(img1, img2):
+    """Compute C-PSNR between two RGB images."""
     mse = np.mean((img1 - img2) ** 2)
     if mse == 0:
         return 100
-    psnr = 10 * np.log10(1.0 / mse)
-    return psnr
+    PIXEL_MAX = 1.0
+    return 10 * math.log10((PIXEL_MAX ** 2) / mse)
 
-def ssim(img1, img2):
-    """Compute Structural Similarity"""
-    return ssim_fn(img1, img2, channel_axis=2, data_range=1.0)
+def calculate_ssim(img1, img2):
+    """Compute SSIM between two RGB images."""
+    ssim = 0
+    for i in range(3):  # channel-wise SSIM
+        ssim += compare_ssim(img1[..., i], img2[..., i], data_range=1.0)
+    return ssim / 3
 
-def ebcm(img1, img2):
-    """Edge-based contrast metric (Sobel edge difference)"""
-    sobel = lambda x: cv2.Sobel(x, cv2.CV_64F, 1, 1, ksize=3)
-    gray1 = cv2.cvtColor((img1 * 255).astype(np.uint8), cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.cvtColor((img2 * 255).astype(np.uint8), cv2.COLOR_BGR2GRAY)
-    edge1 = sobel(gray1)
-    edge2 = sobel(gray2)
+def calculate_ebcm(img1, img2):
+    """Compute edge-based contrast metric (like EBCM)."""
+    def edge_detect(x):
+        return cv2.Sobel(x, cv2.CV_64F, 1, 1, ksize=3)
+    edge1 = edge_detect(cv2.cvtColor((img1 * 255).astype(np.uint8), cv2.COLOR_RGB2GRAY))
+    edge2 = edge_detect(cv2.cvtColor((img2 * 255).astype(np.uint8), cv2.COLOR_RGB2GRAY))
     return np.mean((edge1 - edge2) ** 2)
 
-def lpips_loss_vgg(pred, target):
-    """Compute LPIPS using VGG network (inputs must be normalized tensors [B,C,H,W])"""
-    return loss_fn_alex(pred, target).mean().item()
+def evaluate_metrics_individual(high_dir, enhanced_dir):
+    filenames = sorted(os.listdir(high_dir))
+    for fname in tqdm(filenames, desc="🔍 Evaluating"):
+        high_path = os.path.join(high_dir, fname)
+        enh_path = os.path.join(enhanced_dir, fname)
+        high_img = cv2.imread(high_path)
+        enh_img = cv2.imread(enh_path)
+        if high_img is None or enh_img is None:
+            continue
+        high_img = cv2.cvtColor(high_img, cv2.COLOR_BGR2RGB) / 255.0
+        enh_img = cv2.cvtColor(enh_img, cv2.COLOR_BGR2RGB) / 255.0
 
-def compute_metrics(pred_np, target_np, pred_tensor=None, target_tensor=None):
-    """
-    pred_np, target_np: numpy images in [H, W, 3], range [0,1]
-    pred_tensor, target_tensor: torch tensors in [B,3,H,W], range [-1,1] (for LPIPS)
-    """
-    c_psnr = cpsnr(pred_np, target_np)
-    ssim_val = ssim(pred_np, target_np)
-    ebcm_val = ebcm(pred_np, target_np)
-    
-    lpips_val = None
-    if pred_tensor is not None and target_tensor is not None:
-        lpips_val = lpips_loss_vgg(pred_tensor, target_tensor)
-    
-    return {
-        "C-PSNR": c_psnr,
-        "SSIM": ssim_val,
-        "EBCM": ebcm_val,
-        "LPIPS": lpips_val
-    }
+        # Resize if needed
+        if high_img.shape != enh_img.shape:
+            enh_img = cv2.resize(enh_img, (high_img.shape[1], high_img.shape[0]))
+
+        # Compute metrics
+        cpsnr = calculate_cpsnr(enh_img, high_img)
+        ssim = calculate_ssim(enh_img, high_img)
+        ebcm = calculate_ebcm(enh_img, high_img)
+
+        # LPIPS requires torch tensors
+        with torch.no_grad():
+            high_tensor = torch.tensor(high_img).permute(2, 0, 1).unsqueeze(0).float().cuda()
+            enh_tensor = torch.tensor(enh_img).permute(2, 0, 1).unsqueeze(0).float().cuda()
+            lpips_val = lpips_fn(enh_tensor, high_tensor).item()
+
+        # 🔍 Print per-image metrics
+        print(f"{fname}:  C-PSNR: {cpsnr:.4f}  SSIM: {ssim:.4f}  LPIPS: {lpips_val:.4f}  EBCM: {ebcm:.4f}")
+
+# === Example usage === #
+high_dir = "/content/cvccolondbsplit/test/high"
+enhanced_dir = "/content/outputs/test_enhanced"
+evaluate_metrics_individual(high_dir, enhanced_dir)
