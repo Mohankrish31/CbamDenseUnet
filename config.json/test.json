@@ -2,46 +2,26 @@ import os
 import torch
 from torchvision import transforms
 from PIL import Image
-import cv2
-import numpy as np
-# -------- Paths (CHANGE THESE FOR TEST) --------
-input_dir = "/content/cvccolondb/test/low"                     # Low-light test images
-output_dir = "/content/outputs/test_enhanced_post"             # Enhanced test output
-model_path = "/content/saved_models/cbam_denseunet.pt"         # Trained model
+# -------- Paths --------
+input_dir = "/content/cvccolondbsplit/test/low"             # Path to low-light testing images
+output_dir = "/content/outputs/test_enhanced"               # Output folder for enhanced testing images
+model_path = "/content/saved_models/cbam_denseunet.pt"      # Trained model (.pt)
+# -------- Create output directory if it doesn't exist --------
 os.makedirs(output_dir, exist_ok=True)
-# -------- Device --------
+# -------- Setup device --------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# -------- Load model --------
-from models.cbam_denseunet import cbam_denseunet  # Adjust if your model path/module is different
+# -------- Import model and load weights --------
+from models.cbam_denseunet import cbam_denseunet
 model = cbam_denseunet(in_channels=3, base_channels=64).to(device)
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
-# -------- Transforms --------
+# -------- Define preprocessing and postprocessing --------
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((224, 224)),  # Resize to match model input size
     transforms.ToTensor()
 ])
 to_pil = transforms.ToPILImage()
-# -------- Post-processing function --------
-def apply_postprocessing(img_pil):
-    img_cv = np.array(img_pil)
-    img_cv = cv2.cvtColor(img_cv, cv2.COLOR_RGB2BGR)
-    # CLAHE
-    lab = cv2.cvtColor(img_cv, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    cl = clahe.apply(l)
-    limg = cv2.merge((cl, a, b))
-    img_clahe = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-    # Gamma correction
-    gamma = 0.9
-    invGamma = 1.0 / gamma
-    table = np.array([(i / 255.0) ** invGamma * 255 for i in np.arange(256)]).astype("uint8")
-    img_gamma = cv2.LUT(img_clahe, table)
-    # Convert back to PIL
-    img_final = cv2.cvtColor(img_gamma, cv2.COLOR_BGR2RGB)
-    return Image.fromarray(img_final)
-# -------- Enhance and Save --------
+# -------- Enhance and save testing images --------
 with torch.no_grad():
     for fname in os.listdir(input_dir):
         if fname.lower().endswith(('.jpg', '.jpeg', '.png')):
@@ -50,8 +30,6 @@ with torch.no_grad():
             inp = transform(img).unsqueeze(0).to(device)
             out = model(inp).squeeze().cpu().clamp(0, 1)
             out_img = to_pil(out)
-            # ✅ Apply post-processing
-            final_img = apply_postprocessing(out_img)
-            final_img.save(os.path.join(output_dir, fname))
-            print(f"✅ Test Enhanced & Post-Processed: {fname}")
-print("🎉 Test image enhancement complete. Saved to:", output_dir)
+            out_img.save(os.path.join(output_dir, fname))
+            print(f"✅ Enhanced (test): {fname}")
+print("🎉 Testing image enhancement complete. Saved to:", output_dir)
