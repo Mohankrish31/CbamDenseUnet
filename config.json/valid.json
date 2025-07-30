@@ -5,8 +5,8 @@ from PIL import Image
 import cv2
 import numpy as np
 # -------- Paths (FOR VALIDATION) --------
-input_dir = "/content/cvccolondb/val/low"                      # Low-light validation images
-output_dir = "/content/outputs/val_enhanced_post"              # Enhanced validation output
+input_dir = "/content/cvccolondbsplit/val/low"                      # Low-light validation images
+output_dir = "/content/outputs/val_enhanced"              # Enhanced validation output
 model_path = "/content/saved_models/cbam_denseunet.pt"         # Trained model
 os.makedirs(output_dir, exist_ok=True)
 # -------- Device --------
