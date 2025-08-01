@@ -8,7 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define models
 models = {
-    'BaselineUNet': unet().to(device),
+    'BaselineUNet': baselineunet().to(device),
     'DenseUNet': denseunet().to(device),
     'cbam_denseunet':cbam_denseunet().to(device),
     'DenseUNet_wo_CBAM': denseunet(cbam=False).to(device)
