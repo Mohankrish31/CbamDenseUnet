@@ -1,7 +1,7 @@
 import torch
 from models.unet import unet
 from models.denseunet import denseunet
-from models.cbam_denseunet import denseunet_cbam
+from models.cbam_denseunet import cbam_denseunet
 
 # Define device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -10,7 +10,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 models = {
     'BaselineUNet': unet().to(device),
     'DenseUNet': denseunet().to(device),
-    'DenseUNet_CBAM': denseunet_cbam().to(device),
+    'cbam_denseunet':cbam_denseunet().to(device),
     'DenseUNet_wo_CBAM': denseunet(cbam=False).to(device)
 }
 
