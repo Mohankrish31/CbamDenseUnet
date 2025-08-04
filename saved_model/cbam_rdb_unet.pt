@@ -1,14 +1,10 @@
-from your_model_file import CBAM_RDB_UNet  # Change this to match your file name
+from your_model_file import CBAM_DenseUNet  # Replace with your actual file and class name
 import torch
 import os
-
 # Create model instance
-model = CBAM_RDB_UNet(in_channels=3, base_channels=64)
-
+model = CBAM_DenseUNet(in_channels=3, base_channels=64)  # Use correct init args if different
 # Define dummy weight path
-dummy_weights_path = "cbam_rdb_unet.pt"
-
+dummy_weights_path = "cbam_denseunet.pt"
 # Save the randomly initialized weights
 torch.save(model.state_dict(), dummy_weights_path)
-
 print(f"Saved dummy pretrained model to {dummy_weights_path}")
