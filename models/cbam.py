@@ -1,36 +1,32 @@
 import torch
 import torch.nn as nn
-class ChannelAttention(nn.Module):
-    def __init__(self, in_planes, ratio=8):
+import torch.nn.functional as F
+class CBAM(nn.Module):
+    def __init__(self, channels, reduction=16):
         super().__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.max_pool = nn.AdaptiveMaxPool2d(1)
-        self.fc = nn.Sequential(
-            nn.Conv2d(in_planes, in_planes // ratio, 1, bias=False),
-            nn.ReLU(),
-            nn.Conv2d(in_planes // ratio, in_planes, 1, bias=False)
+        self.channel_att = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(channels, channels // reduction, 1, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channels // reduction, channels, 1, bias=False),
+            nn.Sigmoid()
         )
-        self.sigmoid = nn.Sigmoid()
+        self.spatial_att = nn.Sequential(
+            nn.Conv2d(2, 1, kernel_size=7, padding=3),
+            nn.Sigmoid()
+        )
+
     def forward(self, x):
-        avg_out = self.fc(self.avg_pool(x))
-        max_out = self.fc(self.max_pool(x))
-        return self.sigmoid(avg_out + max_out)
-class SpatialAttention(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv = nn.Conv2d(2, 1, kernel_size=7, padding=3, bias=False)
-        self.sigmoid = nn.Sigmoid()
-    def forward(self, x):
+        # Channel Attention
+        avg_pool = F.adaptive_avg_pool2d(x, 1)
+        max_pool = F.adaptive_max_pool2d(x, 1)
+        channel_att = self.channel_att(avg_pool) + self.channel_att(max_pool)
+        x = x * channel_att
+
+        # Spatial Attention
         avg_out = torch.mean(x, dim=1, keepdim=True)
         max_out, _ = torch.max(x, dim=1, keepdim=True)
-        x = torch.cat([avg_out, max_out], dim=1)
-        return self.sigmoid(self.conv(x))
-class cbam(nn.Module):
-    def __init__(self, channels, ratio=8):
-        super().__init__()
-        self.ca = ChannelAttention(channels, ratio)
-        self.sa = SpatialAttention()
-    def forward(self, x):
-        x = x * self.ca(x)
-        x = x * self.sa(x)
+        spatial_att = self.spatial_att(torch.cat([avg_out, max_out], dim=1))
+        x = x * spatial_att
+
         return x
