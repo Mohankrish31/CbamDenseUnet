@@ -2,7 +2,7 @@ from your_model_file import CBAM_RDB_UNet  # Replace with your actual model file
 import torch
 import os
 # Create model instance
-model = cbamrdbunet(in_channels=3, out_channels=1, base_channels=64)  # Use actual constructor args
+model = cbam_rdb_unet(in_channels=3, out_channels=1, base_channels=64)  # Use actual constructor args
 # Define dummy weight path
 dummy_weights_path = "cbam_rdb_unet.pt"
 # Save the randomly initialized weights
