@@ -1,4 +1,4 @@
-from .cbam_denseunet import cbam_denseunet
+from .cbam_rdb_unet import cbam_rdb_unet
 from .cbam import cbam
-from .dense import denseblock
-__all__ = ["cbam_denseunet", "cbam", "denseblock"]
+from .residual_dense_block import ResidualDenseBlock  # Assuming this is the filename
+__all__ = ["cbam_rdb_unet", "cbam", "ResidualDenseBlock"]
