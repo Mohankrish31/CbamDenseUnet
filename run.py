@@ -18,7 +18,7 @@ with open(args.config, "r") as f:
 input_dir = config["input_dir"]
 output_dir = config["output_dir"]
 model_path = config["model_path"]
-image_size = tuple(config.get("image_size", [224, 224]))
+image_size = tuple(config.get("image_size", [256, 256]))
 num_epochs = config.get("epochs", 5)
 batch_size = config.get("batch_size", 8)
 lr = config.get("learning_rate", 1e-4)
@@ -26,9 +26,9 @@ lr = config.get("learning_rate", 1e-4)
 # === Device ===
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# === Load Model ===
-from models.cbam_denseunet import CBAM_DenseUNet
-model = CBAM_DenseUNet().to(device)
+# === Load CBAM-RDB-UNet Model ===
+from models.cbam_rdb_unet import CBAM_RDB_UNet
+model = CBAM_RDB_UNet(in_channels=3, out_channels=1).to(device)
 
 # === Load Model Weights If Available ===
 if os.path.exists(model_path) and args.phase in ["test", "val"]:
@@ -42,7 +42,7 @@ transform = transforms.Compose([
 ])
 to_pil = transforms.ToPILImage()
 
-# === Define Simple Dataset Loader ===
+# === Simple Dataset Loader ===
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets.folder import default_loader
 
@@ -77,7 +77,6 @@ def train_model():
         epoch_loss = 0
         for imgs, _ in loader:
             imgs = imgs.to(device)
-            # Dummy target: identity (use imgs as target for denoising-like training)
             targets = imgs.clone()
             optimizer.zero_grad()
             outputs = model(imgs)
@@ -90,7 +89,7 @@ def train_model():
     torch.save(model.state_dict(), model_path)
     print(f"💾 Model saved to: {model_path}")
 
-# === Test/Val Function ===
+# === Test/Validation Function ===
 def evaluate_images(tag="test"):
     os.makedirs(output_dir, exist_ok=True)
     model.eval()
