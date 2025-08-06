@@ -1,10 +1,9 @@
-from models.cbam_denseunet import cbam_denseunet  # Replace with the correct import path
-import torch
 import os
-# Create model instance
-model = cbam_denseunet(in_channels=3, base_channels=32)  # Adjust if you use different arguments
-# Define dummy weight path
-dummy_weights_path = "cbam_denseunet.pt"
-# Save the randomly initialized weights
-torch.save(model.state_dict(), dummy_weights_path)
-print(f"✅ Saved dummy pretrained model to {dummy_weights_path}")
+import torch
+# Create folder
+os.makedirs("/content/saved_model", exist_ok=True)
+# Save dummy weights if you don't have a trained model yet
+from models.cbam_denseunet import cbam_denseunet  # make sure this file is available
+model = cbam_denseunet(in_channels=3, base_channels=32)
+torch.save(model.state_dict(), "/content/saved_model/cbam_denseunet.pt")
+print("✅ Model weights saved to /content/saved_model/cbam_denseunet.pt")
