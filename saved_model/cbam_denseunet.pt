@@ -1,10 +1,10 @@
-from your_model_file import CBAM_RDB_UNet  # Replace with your actual model file path
+from models.cbam_denseunet import cbam_denseunet  # Replace with the correct import path
 import torch
 import os
 # Create model instance
-model = cbam_rdb_unet(in_channels=3, out_channels=1, base_channels=64)  # Use actual constructor args
+model = cbam_denseunet(in_channels=3, base_channels=32)  # Adjust if you use different arguments
 # Define dummy weight path
-dummy_weights_path = "cbam_rdb_unet.pt"
+dummy_weights_path = "cbam_denseunet.pt"
 # Save the randomly initialized weights
 torch.save(model.state_dict(), dummy_weights_path)
 print(f"✅ Saved dummy pretrained model to {dummy_weights_path}")
