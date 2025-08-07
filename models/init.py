@@ -1,4 +1,14 @@
 from .cbam_denseunet import cbam_denseunet
 from .cbam import cbam
 from .dense import denseblock
-__all__ = ["cbam_denseunet", "cbam", "denseblock"]
+from .feature_compressor import FeatureCompressor
+from .multiscale_pool import MultiScalePool
+from .enhanced_decoder import EnhancedDecoder
+__all__ = [
+    "cbam_denseunet",
+    "cbam",
+    "denseblock",
+    "FeatureCompressor",
+    "MultiScalePool",
+    "EnhancedDecoder"
+]
