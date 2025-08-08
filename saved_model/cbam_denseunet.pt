@@ -1,0 +1,9 @@
+import os
+import torch
+# Create folder
+os.makedirs("/content/saved_model", exist_ok=True)
+# Save dummy weights if you don't have a trained model yet
+from models.cbam_denseunet import cbam_denseunet  # make sure this file is available
+model = cbam_denseunet_rdb(in_channels=3, base_channels=32)
+torch.save(model.state_dict(), "/content/saved_model/cbam_denseunet.pt")
+print("✅ Model weights saved to /content/saved_model/cbam_denseunet.pt")
