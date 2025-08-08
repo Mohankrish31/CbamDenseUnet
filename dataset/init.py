@@ -1,6 +1,6 @@
 import os
 # Path to the data directory
-data_dir = '/content/CBAMDenseUNet/data'
+data_dir = '/content/CBAMDenseUNetRdb/data'
 os.makedirs(data_dir, exist_ok=True)
 # Create __init__.py file
 init_path = os.path.join(data_dir, '__init__.py')
