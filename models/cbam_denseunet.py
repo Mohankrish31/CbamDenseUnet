@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from models.cbam import cbam
 from models.dense import denseblock
+from models.cbam_denseunet import cbam_denseunet
 from models.rdb import ResidualDenseBlock  # ✅ Import your RDB module
 from models.feature_compressor import FeatureCompressor
 from models.multiscale_pool import MultiScalePool
