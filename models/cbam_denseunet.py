@@ -7,9 +7,9 @@ from models.feature_compressor import FeatureCompressor
 from models.multiscale_pool import MultiScalePool
 from models.enhanced_decoder import EnhancedDecoder
 
-class cbam_denseunet_rdb(nn.Module):
+class cbam_denseunet(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
-        super(cbam_denseunet_rdb, self).__init__()
+        super(cbam_denseunet, self).__init__()
 
         # Dense block output channels
         dense_out_channels = base_channels + 3 * 12  # base + growth from denseblock
