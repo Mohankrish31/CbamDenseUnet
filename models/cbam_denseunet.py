@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-from models.cbam import cbam
-from models.dense import denseblock
-from models.rdb import ResidualDenseBlock  # ✅ Import your RDB module
-from models.feature_compressor import FeatureCompressor
-from models.multiscale_pool import MultiScalePool
-from models.enhanced_decoder import EnhancedDecoder
+from .cbam import cbam
+from .dense import denseblock
+from .rdb import ResidualDenseBlock  # ✅ Import your RDB module
+from .feature_compressor import FeatureCompressor
+from .multiscale_pool import MultiScalePool
+from .enhanced_decoder import EnhancedDecoder
 class cbam_denseunet(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
         super(cbam_denseunet, self).__init__()
