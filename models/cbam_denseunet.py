@@ -67,7 +67,7 @@ class cbam_denseunet(nn.Module):
 # === Test Run ===
 if __name__ == "__main__":
     # Simulate a batch of overexposed images.
-    overexposed_image = torch.ones(8, 3, 256, 256) * 0.95
+    overexposed_image = torch.ones(8, 3, 500, 574) * 0.95
     print("Input image mean:", overexposed_image.mean().item())
 
     # Initialize the modified model.
