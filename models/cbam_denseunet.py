@@ -8,7 +8,6 @@ from .multiscale_pool import MultiScalePool
 from .enhanced_decoder import EnhancedDecoder
 
 # === Illumination Corrector ===
-# A small, dedicated decoder to refine the illumination map.
 class IlluminationCorrector(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -25,13 +24,9 @@ class cbam_denseunet(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
         super(cbam_denseunet, self).__init__()
         
-        # Dense block output channels
         dense_out_channels = base_channels + 3 * 12
 
-        # === Feature Extractor (Re-purposed Encoder) ===
-        # This will now process the single-channel log-transformed illumination map.
         self.feature_extractor = nn.Sequential(
-            # The first conv layer accepts 1 channel from the illumination map.
             nn.Conv2d(1, base_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             denseblock(base_channels, growth_rate=12, num_layers=3),
@@ -40,45 +35,47 @@ class cbam_denseunet(nn.Module):
             MultiScalePool(dense_out_channels),
         )
 
-        # === Illumination Corrector ===
-        # A separate decoder to correct the illumination map.
-        # It takes the features and outputs a single-channel map.
         self.illumination_corrector = IlluminationCorrector(dense_out_channels, 1)
 
     def forward(self, x):
-        # 1. Decompose the image into illumination and reflectance.
-        # Illumination is estimated as the max value across the color channels.
         illumination = x.max(dim=1, keepdim=True)[0] + 1e-5
         reflectance = x / illumination
-        
 
-        # 2. Process the illumination map to correct brightness issues.
-        # Log-transform is used to stabilize the dynamic range.
         log_illumination = torch.log(illumination)
 
-        # Use the repurposed encoder to process the log illumination map.
         illumination_features = self.feature_extractor(log_illumination)
 
-        # Decode the features back to a corrected illumination map.
         corrected_illumination = self.illumination_corrector(illumination_features)
         
-        # 3. Reconstruct the final image.
-        # Multiply the corrected illumination with the original reflectance.
         final_output = corrected_illumination * reflectance
 
-        # Clamp the output to ensure values are in a valid range [0, 1].
         return torch.clamp(final_output, 0, 1)
-    if __name__ == "__main__":
-    # Simulate a batch of overexposed images.
-    # The pixel values are high to represent overexposure.
-    overexposed_image = torch.ones(8, 3, 500, 574) * 0.95
-    print("Input image mean:", overexposed_image.mean().item())
-    # Initialize the modified model.
+
+# === Main Test Block ===
+if __name__ == "__main__":
+    # Test Run
+    print("Running a test of the cbam_denseunet model...")
+
+    # Set up the model for a test run
     model = cbam_denseunet(in_channels=3, base_channels=32)
-    # Pass the overexposed image through the model.
-    output_image = model(overexposed_image)
-    # Print the output details to verify correction.
-    # The output mean should be significantly lower and the standard deviation higher.
-    print("Output image shape:", output_image.shape)
-    print("Output image mean (should be lower):", output_image.mean().item())
-    print("Output image standard deviation (should be higher):", output_image.std().item())
+    print("Model initialized.")
+
+    # Simulate a batch of overexposed images with your desired dimensions
+    # Batch size: 8, Channels: 3, Height: 574, Width: 500
+    try:
+        inp = torch.ones(8, 3, 574, 500) * 0.95
+        print(f"Dummy input tensor created with shape: {inp.shape}")
+        
+        # Pass the simulated overexposed image through the model
+        out = model(inp)
+        
+        # Print the output details to verify correction
+        print(f"Output shape: {out.shape}")
+        print(f"Input brightness (mean): {inp.mean().item():.4f}")
+        print(f"Input contrast (std): {inp.std().item():.4f}")
+        print(f"Output brightness (mean): {out.mean().item():.4f}")
+        print(f"Output contrast (std): {out.std().item():.4f}")
+        
+    except RuntimeError as e:
+        print(f"\nAn error occurred during the forward pass: {e}")
+        print("Please double-check the model's architecture for any channel or dimension mismatches.")
