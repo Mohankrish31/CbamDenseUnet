@@ -6,15 +6,21 @@ from .rdb import ResidualDenseBlock  # ✅ Import your RDB module
 from .feature_compressor import FeatureCompressor
 from .multiscale_pool import MultiScalePool
 from .enhanced_decoder import EnhancedDecoder
-# === Brightness & Contrast Adjustment Layer ===
+# === Brightness & Contrast Adjustment Layer (Automatic) ===
 class BrightnessContrastAdjust(nn.Module):
-    def __init__(self):
+    def __init__(self, target_brightness=0.47, target_contrast=0.31):
+        """
+        target_brightness: desired mean pixel intensity in range [0, 1]
+        target_contrast: desired standard deviation of pixel intensity in range [0, 1]
+        """
         super().__init__()
-        self.brightness = nn.Parameter(torch.zeros(1, 3, 1, 1))  # learnable shift
-        self.contrast = nn.Parameter(torch.ones(1, 3, 1, 1))     # learnable scale
+        self.target_brightness = target_brightness
+        self.target_contrast = target_contrast
     def forward(self, x):
-        # Adjust contrast around mean 0.5, then shift brightness
-        x = self.contrast * (x - 0.5) + 0.5 + self.brightness
+        mean = x.mean(dim=[2, 3], keepdim=True)
+        std = x.std(dim=[2, 3], keepdim=True)
+        # Normalize to target brightness and contrast
+        x = (x - mean) / (std + 1e-5) * self.target_contrast + self.target_brightness
         return torch.clamp(x, 0, 1)
 # === Main Model ===
 class cbam_denseunet(nn.Module):
@@ -47,8 +53,11 @@ class cbam_denseunet(nn.Module):
             nn.Conv2d(in_channels, in_channels, kernel_size=1),
             nn.Sigmoid()
         )
-        # === Brightness & Contrast Adjustment Layer ===
-        self.bc_adjust = BrightnessContrastAdjust()
+        # === Automatic Brightness & Contrast Adjustment Layer ===
+        self.bc_adjust = BrightnessContrastAdjust(
+            target_brightness=0.47,  # ~120 in 0–255 range
+            target_contrast=0.31     # ~80 in 0–255 range
+        )
     def forward(self, x):
         # Encoder
         enc = self.encoder(x)
@@ -66,7 +75,9 @@ class cbam_denseunet(nn.Module):
 # === Test Run ===
 if __name__ == "__main__":
     model = cbam_denseunet(in_channels=3, base_channels=32)
-    inp = torch.randn(1, 3, 224, 224)  # Dummy input
+    inp = torch.randn(8, 3, 500, 574)  
     out = model(inp)
     print("Input shape:", inp.shape)
     print("Output shape:", out.shape)
+    print("Output brightness:", out.mean().item())
+    print("Output contrast:", out.std().item())
