@@ -28,11 +28,25 @@ class cbam_denseunet(nn.Module):
             mid_channels=base_channels // 2,
             out_channels=in_channels
         )
+        # === Learnable Skip Scaling ===
+        self.skip_scale = nn.Parameter(torch.ones(1))
+        # === Illumination Adjustment Layer ===
+        self.illum_adjust = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, kernel_size=1),
+            nn.Sigmoid()
+        )
     def forward(self, x):
+        # Encoder
         enc = self.encoder(x)
+        # Feature Compression
         compressed = self.feature_compression(enc)
+        # Decoder output
         dec = self.decoder(compressed)
-        return dec + x  # ✅ Residual learning
+        # Apply learnable skip scaling
+        out = dec * self.skip_scale + x * (1 - self.skip_scale)
+        # Apply illumination adjustment
+        out = out * self.illum_adjust(out)
+        return out
 # === Test Run ===
 if __name__ == "__main__":
     model = cbam_denseunet(in_channels=3, base_channels=32)
