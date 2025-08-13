@@ -2,101 +2,83 @@ import torch
 import torch.nn as nn
 from .cbam import cbam
 from .dense import denseblock
-from .rdb import ResidualDenseBlock  # ✅ Import your RDB module
+from .rdb import ResidualDenseBlock
 from .feature_compressor import FeatureCompressor
 from .multiscale_pool import MultiScalePool
 from .enhanced_decoder import EnhancedDecoder
 
-# === Brightness & Contrast Adjustment Layer (Automatic) ===
-class BrightnessContrastAdjust(nn.Module):
-    def __init__(self, target_brightness=0.47, target_contrast=0.31):
-        """
-        target_brightness: desired mean pixel intensity in range [0, 1]
-        target_contrast: desired standard deviation of pixel intensity in range [0, 1]
-        """
+# === Illumination Corrector ===
+# A small, dedicated decoder to refine the illumination map.
+class IlluminationCorrector(nn.Module):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.target_brightness = target_brightness
-        self.target_contrast = target_contrast
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, padding=0)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        mean = x.mean(dim=[2, 3], keepdim=True)
-        std = x.std(dim=[2, 3], keepdim=True)
+        x = self.conv(x)
+        x = self.sigmoid(x)
+        return x
 
-        # Normalize to target brightness and contrast
-        x = (x - mean) / (std + 1e-5) * self.target_contrast + self.target_brightness
-        return torch.clamp(x, 0, 1)
-
-# === Main Model ===
+# === Main Model: cbam_denseunet with Retinex ===
 class cbam_denseunet(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
         super(cbam_denseunet, self).__init__()
-
+        
         # Dense block output channels
-        dense_out_channels = base_channels + 3 * 12  # base + growth from denseblock
+        dense_out_channels = base_channels + 3 * 12
 
-        # === Encoder ===
-        self.encoder = nn.Sequential(
-            nn.Conv2d(in_channels, base_channels, kernel_size=3, padding=1),
+        # === Feature Extractor (Re-purposed Encoder) ===
+        # This will now process the single-channel log-transformed illumination map.
+        self.feature_extractor = nn.Sequential(
+            # The first conv layer accepts 1 channel from the illumination map.
+            nn.Conv2d(1, base_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            denseblock(base_channels, growth_rate=12, num_layers=3),  # DenseBlock
-            cbam(dense_out_channels),                                 # CBAM
-            ResidualDenseBlock(dense_out_channels, growth_channels=16, num_layers=3),  # ✅ RDB
-            MultiScalePool(dense_out_channels)                        # Multi-scale pooling
+            denseblock(base_channels, growth_rate=12, num_layers=3),
+            cbam(dense_out_channels),
+            ResidualDenseBlock(dense_out_channels, growth_channels=16, num_layers=3),
+            MultiScalePool(dense_out_channels),
         )
 
-        # === Feature Compression ===
-        self.feature_compression = FeatureCompressor(dense_out_channels, base_channels)
-
-        # === Decoder (remove Sigmoid at the end) ===
-        self.decoder = nn.Sequential(
-            nn.Conv2d(base_channels, base_channels // 2, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(base_channels // 2, in_channels, kernel_size=3, padding=1),
-            nn.Identity()  # No activation here; BC adjust will handle final range
-        )
-
-        # === Learnable Skip Scaling ===
-        self.skip_scale = nn.Parameter(torch.ones(1))
-
-        # === Illumination Adjustment Layer ===
-        self.illum_adjust = nn.Sequential(
-            nn.Conv2d(in_channels, in_channels, kernel_size=1),
-            nn.Sigmoid()
-        )
-
-        # === Automatic Brightness & Contrast Adjustment Layer ===
-        self.bc_adjust = BrightnessContrastAdjust(
-            target_brightness=0.47,  # ~120 in 0–255 range
-            target_contrast=0.31     # ~80 in 0–255 range
-        )
+        # === Illumination Corrector ===
+        # A separate decoder to correct the illumination map.
+        # It takes the features and outputs a single-channel map.
+        self.illumination_corrector = IlluminationCorrector(dense_out_channels, 1)
 
     def forward(self, x):
-        # Encoder
-        enc = self.encoder(x)
+        # 1. Decompose the image into illumination and reflectance.
+        # Illumination is estimated as the max value across the color channels.
+        illumination = x.max(dim=1, keepdim=True)[0] + 1e-5
+        reflectance = x / illumination
+        
 
-        # Feature Compression
-        compressed = self.feature_compression(enc)
+        # 2. Process the illumination map to correct brightness issues.
+        # Log-transform is used to stabilize the dynamic range.
+        log_illumination = torch.log(illumination)
 
-        # Decoder output
-        dec = self.decoder(compressed)
+        # Use the repurposed encoder to process the log illumination map.
+        illumination_features = self.feature_extractor(log_illumination)
 
-        # Apply learnable skip scaling
-        out = dec * self.skip_scale + x * (1 - self.skip_scale)
+        # Decode the features back to a corrected illumination map.
+        corrected_illumination = self.illumination_corrector(illumination_features)
+        
+        # 3. Reconstruct the final image.
+        # Multiply the corrected illumination with the original reflectance.
+        final_output = corrected_illumination * reflectance
 
-        # Apply illumination adjustment
-        out = out * self.illum_adjust(out)
-
-        # Apply brightness & contrast adjustment
-        out = self.bc_adjust(out)
-
-        return out
-
-# === Test Run ===
-if __name__ == "__main__":
+        # Clamp the output to ensure values are in a valid range [0, 1].
+        return torch.clamp(final_output, 0, 1)
+    if __name__ == "__main__":
+    # Simulate a batch of overexposed images.
+    # The pixel values are high to represent overexposure.
+    overexposed_image = torch.ones(8, 3, 500, 574) * 0.95
+    print("Input image mean:", overexposed_image.mean().item())
+    # Initialize the modified model.
     model = cbam_denseunet(in_channels=3, base_channels=32)
-    inp = torch.randn(8, 3, 500, 574)  # Dummy input
-    out = model(inp)
-    print("Input shape:", inp.shape)
-    print("Output shape:", out.shape)
-    print("Output brightness:", out.mean().item())
-    print("Output contrast:", out.std().item())
+    # Pass the overexposed image through the model.
+    output_image = model(overexposed_image)
+    # Print the output details to verify correction.
+    # The output mean should be significantly lower and the standard deviation higher.
+    print("Output image shape:", output_image.shape)
+    print("Output image mean (should be lower):", output_image.mean().item())
+    print("Output image standard deviation (should be higher):", output_image.std().item())
