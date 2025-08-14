@@ -1,22 +1,31 @@
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-def plot_average_metrics(cpsnr_list, ssim_list, lpips_list, ebcm_list, save_path="avg_metrics_bar.png"):
-    metrics = ['C-PSNR', 'SSIM', 'LPIPS', 'EBCM']
-    averages = [
-        np.mean(cpsnr_list),
-        np.mean(ssim_list),
-        np.mean(lpips_list),
-        np.mean(ebcm_list)
-    ]
-    plt.figure(figsize=(8, 5))
-    bars = plt.bar(metrics, averages, color=['blue', 'green', 'red', 'purple'])
-    plt.title('Average Evaluation Metrics')
-    plt.ylabel('Value')
-    plt.ylim(0, max(averages) * 1.2)
-    # Annotate bars
-    for bar, value in zip(bars, averages):
-        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{value:.3f}', ha='center', va='bottom')
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.tight_layout()
-    plt.savefig(save_path)
-    plt.show()
+
+# === Load your saved metrics CSV ===
+df = pd.read_csv("metrics_results.csv")
+
+# === Line plot: Per-image metrics ===
+plt.figure(figsize=(12, 6))
+plt.plot(df["filename"], df["PSNR"], marker='o', label="PSNR")
+plt.plot(df["filename"], df["SSIM"], marker='s', label="SSIM")
+plt.plot(df["filename"], df["LPIPS"], marker='^', label="LPIPS")
+plt.xticks(rotation=90)
+plt.xlabel("Image")
+plt.ylabel("Metric Value")
+plt.title("Per-image Metrics")
+plt.legend()
+plt.tight_layout()
+plt.savefig("per_image_metrics.png", dpi=300)
+plt.show()
+
+# === Bar chart: Mean metrics ===
+mean_values = [df["PSNR"].mean(), df["SSIM"].mean(), df["LPIPS"].mean()]
+plt.figure(figsize=(6, 4))
+bars = plt.bar(["PSNR", "SSIM", "LPIPS"], mean_values, color=['skyblue', 'lightgreen', 'salmon'])
+plt.ylabel("Mean Value")
+plt.title("Mean Metrics Across Dataset")
+for bar, val in zip(bars, mean_values):
+    plt.text(bar.get_x() + bar.get_width()/2, val, f"{val:.4f}", ha='center', va='bottom', fontsize=9)
+plt.savefig("mean_metrics.png", dpi=300)
+plt.show()
