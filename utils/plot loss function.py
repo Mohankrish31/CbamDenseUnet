@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
-plt.figure(figsize=(10, 6))
-plt.plot(train_losses, 'o-', label='Train Loss')
-plt.plot(val_losses, 's-', label='Validation Loss')
-plt.xlabel("Epoch Number", fontsize=14)
-plt.ylabel("Total Loss", fontsize=14)
-plt.title("Training and Validation Loss Curve for cbamrdbunet", fontsize=16)
-plt.legend(loc="upper right", fontsize=12)
-plt.grid(True)
+# === Plot Training vs Validation Loss ===
+plt.figure(figsize=(8, 6))
+plt.plot(train_losses, label='Train Loss', marker='o')
+plt.plot(val_losses, label='Validation Loss', marker='s')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Training vs Validation Loss')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.6)
 plt.tight_layout()
-plt.savefig("training_validation_loss_curve.png", dpi=300)
+plt.savefig("loss_curve.png", dpi=300)  # Save high-quality for paper
 plt.show()
-
