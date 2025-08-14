@@ -26,7 +26,7 @@ class IlluminationCorrector(nn.Module):
 # === Main Model: cbam_denseunet with Retinex ===
 class cbam_denseunet_retinex(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
-        super(cbam_denseunet, self).__init__()
+        super(cbam_denseunet_retinex, self).__init__()
         
         dense_out_channels = base_channels + 3 * 12
 
