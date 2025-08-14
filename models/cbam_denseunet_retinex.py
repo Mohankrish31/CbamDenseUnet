@@ -6,7 +6,6 @@ from .rdb import ResidualDenseBlock
 from .feature_compressor import FeatureCompressor
 from .multiscale_pool import MultiScalePool
 from .enhanced_decoder import EnhancedDecoder
-
 # === Illumination Corrector (Modified and Enhanced) ===
 # This version has more layers to learn a more complex mapping for illumination correction.
 class IlluminationCorrector(nn.Module):
