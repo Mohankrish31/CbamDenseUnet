@@ -24,7 +24,7 @@ class IlluminationCorrector(nn.Module):
         return self.net(x)
 
 # === Main Model: cbam_denseunet with Retinex ===
-class cbam_denseunet(nn.Module):
+class cbam_denseunet_retinex(nn.Module):
     def __init__(self, in_channels=3, base_channels=32):
         super(cbam_denseunet, self).__init__()
         
