@@ -7,4 +7,4 @@ from .feature_compressor import FeatureCompressor
 from .multiscale_pool import MultiScalePool
 from .enhanced_decoder import EnhancedDecoder
 # Import the main model and its helper classes
-from .cbam_denseunet import cbam_denseunet, IlluminationCorrector
+from .cbam_denseunet_retinex import cbam_denseunet_retinex, IlluminationCorrector
