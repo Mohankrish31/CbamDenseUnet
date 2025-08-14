@@ -59,10 +59,10 @@ class cbam_denseunet_retinex(nn.Module):
 # === Main Test Block ===
 if __name__ == "__main__":
     # Test Run
-    print("Running a test of the cbam_denseunet model...")
+    print("Running a test of the cbam_denseunet_retinex model...")
 
     # Set up the model for a test run
-    model = cbam_denseunet(in_channels=3, base_channels=32)
+    model = cbam_denseunet_retinex(in_channels=3, base_channels=32)
     print("Model initialized.")
 
     # Simulate a batch of overexposed images with your desired dimensions
