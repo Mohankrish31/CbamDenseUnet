@@ -31,7 +31,7 @@ class cbam_denseunet_retinex(nn.Module):
         dense_out_channels = base_channels + 3 * 12
 
         self.feature_extractor = nn.Sequential(
-            nn.Conv2d(1, base_channels, kernel_size=3, padding=1),
+            nn.Conv2d(3, base_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             denseblock(base_channels, growth_rate=12, num_layers=3),
             cbam(dense_out_channels),
