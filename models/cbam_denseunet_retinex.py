@@ -28,7 +28,7 @@ class IlluminationCorrector(nn.Module):
 # Enhanced Decoder
 # -----------------------------
 class EnhancedDecoder(nn.Module):
-    def __init__(self, in_channels=3, mid_channels=32, out_channels=3):
+    def __init__(self, in_channels, mid_channels=32, out_channels=3):
         super(EnhancedDecoder, self).__init__()
         self.decoder = nn.Sequential(
             nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
@@ -40,10 +40,9 @@ class EnhancedDecoder(nn.Module):
         self.cbam = cbam(out_channels)
 
     def forward(self, x):
-        x = self.decoder(x)   # now x has shape [B, out_channels, H, W]
-        x = self.cbam(x)      # CBAM expects out_channels, which is >0
+        x = self.decoder(x)
+        x = self.cbam(x)
         return x
-
 
 # -----------------------------
 # Main Model
@@ -67,8 +66,8 @@ class cbam_denseunet_retinex(nn.Module):
         # Illumination corrector
         self.illumination_corrector = IlluminationCorrector(dense_out_channels, 3)
 
-        # Enhanced decoder (always 3-channel input)
-        self.decoder = EnhancedDecoder(in_channels=3, mid_channels=32, out_channels=3)
+        # Decoder is dynamically initialized
+        self.decoder = None
 
         # Learnable skip connection
         self.alpha = nn.Parameter(torch.tensor(0.5))
@@ -76,6 +75,15 @@ class cbam_denseunet_retinex(nn.Module):
     def forward(self, x):
         # Extract features
         feat = self.feature_extractor(x)
+
+        # Initialize decoder dynamically after feature extraction
+        if self.decoder is None:
+            in_channels_decoder = feat.shape[1]
+            self.decoder = EnhancedDecoder(
+                in_channels=in_channels_decoder,
+                mid_channels=32,
+                out_channels=3
+            ).to(x.device)
 
         # Compute illumination
         if self.use_learnable_illumination:
