@@ -47,7 +47,7 @@ class EnhancedDecoder(nn.Module):
 # Main Model: cbam_denseunet_retinex + EnhancedDecoder
 # -----------------------------
 class cbam_denseunet_retinex(nn.Module):
-    def __init__(self, in_channels=3, base_channels=32, use_learnable_illumination=True):
+    def __init__(self, in_channels=3, base_channels=48, use_learnable_illumination=True):
         super(cbam_denseunet_retinex, self).__init__()
         self.use_learnable_illumination = use_learnable_illumination
 
