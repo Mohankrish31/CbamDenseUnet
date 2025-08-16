@@ -66,9 +66,9 @@ if __name__ == "__main__":
     print("Model initialized.")
 
     # Simulate a batch of overexposed images with your desired dimensions
-    # Batch size: 8, Channels: 3, Height: 574, Width: 500
+    # Batch size: 8, Channels: 3, Height: 224, Width: 224
     try:
-        inp = torch.ones(8, 3, 574, 500) * 0.95
+        inp = torch.ones(8, 3, 224, 224) * 0.95
         print(f"Dummy input tensor created with shape: {inp.shape}")
         
         # Pass the simulated overexposed image through the model
