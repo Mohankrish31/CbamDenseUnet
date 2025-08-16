@@ -16,6 +16,7 @@ class IlluminationCorrector(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(in_channels // 2, in_channels // 4, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
+            # *** Change 1: The final layer must output 3 channels for a 3-channel illumination map. ***
             nn.Conv2d(in_channels // 4, out_channels, kernel_size=1, padding=0),
             nn.Sigmoid()
         )
@@ -30,6 +31,7 @@ class cbam_denseunet_retinex(nn.Module):
         
         dense_out_channels = base_channels + 3 * 12
 
+        # This feature extractor will now be used for the 3-channel illumination map.
         self.feature_extractor = nn.Sequential(
             nn.Conv2d(3, base_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
@@ -39,17 +41,25 @@ class cbam_denseunet_retinex(nn.Module):
             MultiScalePool(dense_out_channels),
         )
 
-        # The model now uses the new, more complex IlluminationCorrector
-        self.illumination_corrector = IlluminationCorrector(dense_out_channels, 1)
+        # *** Change 2: The IlluminationCorrector is now initialized to output 3 channels. ***
+        # This allows it to correct each color channel independently.
+        self.illumination_corrector = IlluminationCorrector(dense_out_channels, 3)
 
     def forward(self, x):
+        # The illumination and reflectance are still derived from the original 3-channel image
         illumination = x.max(dim=1, keepdim=True)[0] + 1e-5
         reflectance = x / illumination
 
         log_illumination = torch.log(illumination)
 
-        illumination_features = self.feature_extractor(log_illumination)
+        # Replicate the single-channel log_illumination map to have 3 channels
+        illumination_3channel = log_illumination.repeat(1, 3, 1, 1)
 
+        # Pass the 3-channel illumination to the feature extractor
+        # It will now work as it's configured for 3-channel input
+        illumination_features = self.feature_extractor(illumination_3channel)
+
+        # The corrected_illumination is now a 3-channel tensor
         corrected_illumination = self.illumination_corrector(illumination_features)
         
         final_output = corrected_illumination * reflectance
