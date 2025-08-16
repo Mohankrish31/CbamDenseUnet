@@ -28,7 +28,7 @@ class IlluminationCorrector(nn.Module):
 # Enhanced Decoder
 # -----------------------------
 class EnhancedDecoder(nn.Module):
-    def __init__(self, in_channels, mid_channels=64, out_channels=3):
+    def __init__(self, in_channels, mid_channels=32, out_channels=3):
         super(EnhancedDecoder, self).__init__()
         self.decoder = nn.Sequential(
             nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
@@ -44,15 +44,15 @@ class EnhancedDecoder(nn.Module):
         return x
 
 # -----------------------------
-# Main Model: cbam_denseunet_retinex + EnhancedDecoder
+# Main Model
 # -----------------------------
 class cbam_denseunet_retinex(nn.Module):
-    def __init__(self, in_channels=3, base_channels=48, use_learnable_illumination=True):
+    def __init__(self, in_channels=3, base_channels=32, use_learnable_illumination=True):
         super(cbam_denseunet_retinex, self).__init__()
         self.use_learnable_illumination = use_learnable_illumination
 
-        # Deep feature extractor
-        dense_out_channels = base_channels + 4 * 16  # after DenseBlock
+        # Feature extractor
+        dense_out_channels = base_channels + 4 * 16
         self.feature_extractor = nn.Sequential(
             nn.Conv2d(in_channels, base_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
@@ -62,20 +62,27 @@ class cbam_denseunet_retinex(nn.Module):
             MultiScalePool(dense_out_channels)
         )
 
-        # Optional learnable illumination
+        # Illumination corrector
         self.illumination_corrector = IlluminationCorrector(dense_out_channels, 3)
 
-        # Enhanced decoder
-        self.enhanced_decoder = EnhancedDecoder(3, mid_channels=64, out_channels=3)
+        # Enhanced decoder will be initialized dynamically after feature extraction
+        self.decoder = None
 
-        # Learnable skip connection weight
+        # Learnable skip connection
         self.alpha = nn.Parameter(torch.tensor(0.5))
 
     def forward(self, x):
+        # Extract features
+        feat = self.feature_extractor(x)
+
+        # Initialize decoder dynamically based on feature channels
+        if self.decoder is None:
+            in_channels_decoder = feat.shape[1]
+            self.decoder = EnhancedDecoder(in_channels_decoder, mid_channels=32, out_channels=3).to(x.device)
+
         # Compute illumination
         if self.use_learnable_illumination:
-            illum_feat = self.feature_extractor(x)
-            illumination = self.illumination_corrector(illum_feat)
+            illumination = self.illumination_corrector(feat)
         else:
             illumination = x.max(dim=1, keepdim=True)[0] + 1e-5
             illumination = illumination.repeat(1, 3, 1, 1)
@@ -83,10 +90,10 @@ class cbam_denseunet_retinex(nn.Module):
         # Reflectance
         reflectance = x / (illumination + 1e-5)
 
-        # Pass illumination through enhanced decoder
-        corrected_illumination = self.enhanced_decoder(illumination)
+        # Decoder refinement
+        corrected_illumination = self.decoder(illumination)
 
-        # Final output with skip connection
+        # Skip connection
         final_output = corrected_illumination * reflectance + self.alpha * x
         return torch.clamp(final_output, 0, 1)
 
