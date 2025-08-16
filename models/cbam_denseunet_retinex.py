@@ -28,7 +28,7 @@ class IlluminationCorrector(nn.Module):
 # Enhanced Decoder
 # -----------------------------
 class EnhancedDecoder(nn.Module):
-    def __init__(self, in_channels, mid_channels=32, out_channels=3):
+    def __init__(self, in_channels=3, mid_channels=32, out_channels=3):
         super(EnhancedDecoder, self).__init__()
         self.decoder = nn.Sequential(
             nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
@@ -36,12 +36,14 @@ class EnhancedDecoder(nn.Module):
             nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
             nn.Sigmoid()
         )
+        # CBAM applied to output channels
         self.cbam = cbam(out_channels)
 
     def forward(self, x):
-        x = self.decoder(x)
-        x = self.cbam(x)
+        x = self.decoder(x)   # now x has shape [B, out_channels, H, W]
+        x = self.cbam(x)      # CBAM expects out_channels, which is >0
         return x
+
 
 # -----------------------------
 # Main Model
