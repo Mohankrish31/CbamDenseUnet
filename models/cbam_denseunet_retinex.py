@@ -1,117 +1,88 @@
-import torch
+import torchimport torch
 import torch.nn as nn
-import torch.nn.functional as F
 from .cbam import cbam
 from .dense import denseblock
 from .rdb import ResidualDenseBlock
+from .feature_compressor import FeatureCompressor
 from .multiscale_pool import MultiScalePool
-
-# -----------------------------
-# Illumination Corrector (optional learnable)
-# -----------------------------
+from .enhanced_decoder import EnhancedDecoder
+# === Illumination Corrector (Modified and Enhanced) ===
+# This version has more layers to learn a more complex mapping for illumination correction.
 class IlluminationCorrector(nn.Module):
-    def __init__(self, in_channels, out_channels=3):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
         self.net = nn.Sequential(
             nn.Conv2d(in_channels, in_channels // 2, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(in_channels // 2, in_channels // 4, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels // 4, out_channels, kernel_size=1),
+            nn.Conv2d(in_channels // 4, out_channels, kernel_size=1, padding=0),
             nn.Sigmoid()
         )
 
     def forward(self, x):
         return self.net(x)
 
-# -----------------------------
-# Enhanced Decoder
-# -----------------------------
-class EnhancedDecoder(nn.Module):
-    def __init__(self, in_channels, mid_channels=32, out_channels=3):
-        super(EnhancedDecoder, self).__init__()
-        self.decoder = nn.Sequential(
-            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1),
-            nn.Sigmoid()
-        )
-        # CBAM applied to output channels
-        self.cbam = cbam(out_channels)
-
-    def forward(self, x):
-        x = self.decoder(x)
-        x = self.cbam(x)
-        return x
-
-# -----------------------------
-# Main Model
-# -----------------------------
+# === Main Model: cbam_denseunet with Retinex ===
 class cbam_denseunet_retinex(nn.Module):
-    def __init__(self, in_channels=3, base_channels=32, use_learnable_illumination=True):
+    def __init__(self, in_channels=3, base_channels=32):
         super(cbam_denseunet_retinex, self).__init__()
-        self.use_learnable_illumination = use_learnable_illumination
+        
+        dense_out_channels = base_channels + 3 * 12
 
-        # Feature extractor
-        dense_out_channels = base_channels + 4 * 16
         self.feature_extractor = nn.Sequential(
-            nn.Conv2d(in_channels, base_channels, kernel_size=3, padding=1),
+            nn.Conv2d(1, base_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            denseblock(base_channels, growth_rate=16, num_layers=4),
+            denseblock(base_channels, growth_rate=12, num_layers=3),
             cbam(dense_out_channels),
-            ResidualDenseBlock(dense_out_channels, growth_channels=16, num_layers=4),
-            MultiScalePool(dense_out_channels)
+            ResidualDenseBlock(dense_out_channels, growth_channels=16, num_layers=3),
+            MultiScalePool(dense_out_channels),
         )
 
-        # Illumination corrector
-        self.illumination_corrector = IlluminationCorrector(dense_out_channels, 3)
-
-        # Decoder is dynamically initialized
-        self.decoder = None
-
-        # Learnable skip connection
-        self.alpha = nn.Parameter(torch.tensor(0.5))
+        # The model now uses the new, more complex IlluminationCorrector
+        self.illumination_corrector = IlluminationCorrector(dense_out_channels, 1)
 
     def forward(self, x):
-        # Extract features
-        feat = self.feature_extractor(x)
+        illumination = x.max(dim=1, keepdim=True)[0] + 1e-5
+        reflectance = x / illumination
 
-        # Initialize decoder dynamically after feature extraction
-        if self.decoder is None:
-            in_channels_decoder = feat.shape[1]
-            self.decoder = EnhancedDecoder(
-                in_channels=in_channels_decoder,
-                mid_channels=32,
-                out_channels=3
-            ).to(x.device)
+        log_illumination = torch.log(illumination)
 
-        # Compute illumination
-        if self.use_learnable_illumination:
-            illumination = self.illumination_corrector(feat)
-        else:
-            illumination = x.max(dim=1, keepdim=True)[0] + 1e-5
-            illumination = illumination.repeat(1, 3, 1, 1)
+        illumination_features = self.feature_extractor(log_illumination)
 
-        # Reflectance
-        reflectance = x / (illumination + 1e-5)
+        corrected_illumination = self.illumination_corrector(illumination_features)
+        
+        final_output = corrected_illumination * reflectance
 
-        # Decoder refinement
-        corrected_illumination = self.decoder(illumination)
-
-        # Skip connection
-        final_output = corrected_illumination * reflectance + self.alpha * x
         return torch.clamp(final_output, 0, 1)
 
-# -----------------------------
-# Test Run
-# -----------------------------
+# === Main Test Block ===
 if __name__ == "__main__":
-    model = cbam_denseunet_retinex()
-    inp = torch.rand(2, 3, 224, 224)
-    out = model(inp)
-    print("Input shape:", inp.shape)
-    print("Output shape:", out.shape)
-    print("Input brightness (mean):", inp.mean().item())
-    print("Output brightness (mean):", out.mean().item())
-    print("Input contrast (std):", inp.std().item())
-    print("Output contrast (std):", out.std().item())
+    # Test Run
+    print("Running a test of the cbam_denseunet_retinex model...")
+
+    # Set up the model for a test run
+    model = cbam_denseunet_retinex(in_channels=3, base_channels=32)
+    print("Model initialized.")
+
+    # Simulate a batch of overexposed images with your desired dimensions
+    # Batch size: 8, Channels: 3, Height: 574, Width: 500
+    try:
+        inp = torch.ones(8, 3, 574, 500) * 0.95
+        print(f"Dummy input tensor created with shape: {inp.shape}")
+        
+        # Pass the simulated overexposed image through the model
+        out = model(inp)
+        
+        # Print the output details to verify correction
+        print(f"Output shape: {out.shape}")
+        print(f"Input brightness (mean): {inp.mean().item():.4f}")
+        print(f"Input contrast (std): {inp.std().item():.4f}")
+        print(f"Output brightness (mean): {out.mean().item():.4f}")
+        print(f"Output contrast (std): {out.std().item():.4f}")
+        
+    except RuntimeError as e:
+        print(f"\nAn error occurred during the forward pass: {e}")
+        print("Please double-check the model's architecture for any channel or dimension mismatches.")after resizing the test image to224x224 will improve the result of the metrics any correction required in this program? i muisng ebcm as metrics and edge loss shouldi need any correctioninthe above program?
+
+   
