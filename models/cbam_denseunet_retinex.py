@@ -63,7 +63,7 @@ class cbam_denseunet_retinex(nn.Module):
     - Learnable skip scaling (alpha): blends enhanced result with original input to avoid
       under/over enhancement. alpha in (0,1) via sigmoid.
     """
-    def __init__(self, in_channels=3, base_channels=48):
+    def __init__(self, in_channels=3, base_channels=64):
         super().__init__()
         self.eps = 1e-5
 
@@ -133,7 +133,7 @@ class cbam_denseunet_retinex(nn.Module):
 # =========================
 if __name__ == "__main__":
     print("Running test of cbam_denseunet_retinex (with decoder CBAM + skip scaling)...")
-    model = cbam_denseunet_retinex(in_channels=3, base_channels=48)
+    model = cbam_denseunet_retinex(in_channels=3, base_channels=64)
     inp = torch.rand(2, 3, 224, 224) * 0.4  # simulate darker inputs
     out = model(inp)
     print("Input:", inp.shape, "Output:", out.shape)
