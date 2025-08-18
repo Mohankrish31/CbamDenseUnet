@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from  cbam_denseunet.cbam import cbam
-from  cbam_denseunet.dense import denseblock
-from  cbam_denseunet.rdb import ResidualDenseBlock
-from  cbam_denseunet.multiscale_pool import MultiScalePool
+from  .cbam import cbam
+from  .dense import denseblock
+from  .rdb import ResidualDenseBlock
+from  .multiscale_pool import MultiScalePool
 # =========================
 # Decoder with CBAM inside
 # =========================
