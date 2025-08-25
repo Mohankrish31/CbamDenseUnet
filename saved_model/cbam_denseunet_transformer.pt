@@ -2,8 +2,8 @@ import os
 import torch
 # Create folder for saving model weights
 os.makedirs("/content/saved_model", exist_ok=True)
-# ✅ Import your CBAM-DenseUNet + Transformer model
-from models.cbam_denseunet_transformer import CBAMDenseUNetTransformer  
+# ✅ Import your CBAM-DenseUNet 
+from models.cbam_denseunet import CBAMDenseUNet
 # ✅ Initialize model (adjust parameters if needed)
 model = cbam_denseunet_transformer(in_channels=3, base_channels=32, num_heads=4)
 # ✅ Save model weights
