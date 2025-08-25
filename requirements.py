@@ -1,5 +1,5 @@
 # ==============================
-# Requirements for CDAN-DenseUNet
+# Requirements for CBAM-DenseUNet
 # Low-light colonoscopy image enhancement
 # ==============================
 # ------------------------------
