@@ -7,5 +7,5 @@ from models.cbam_denseunet_transformer import CBAMDenseUNetTransformer
 # ✅ Initialize model (adjust parameters if needed)
 model = cbam_denseunet_transformer(in_channels=3, base_channels=32, num_heads=4)
 # ✅ Save model weights
-torch.save(model.state_dict(), "/content/saved_model/cbam_denseunet_transformer.pt")
-print("✅ Model weights saved to /content/saved_model/cbam_denseunet_transformer.pt")
+torch.save(model.state_dict(), "/content/saved_model/cbam_denseunet.pt")
+print("✅ Model weights saved to /content/saved_model/cbam_denseunet.pt")
