@@ -1,9 +1,0 @@
-{
-  "input_dir": "/content/cvccolondbsplit/train/low",
-  "output_dir": "/content/outputs/train_enhanced",
-  "model_path": "/content/saved_models/cbam_denseunet.pt",
-  "image_size": [224, 224],
-  "epochs": 100,
-  "batch_size": 8,
-  "learning_rate": 0.0001
-}
